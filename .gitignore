@@ -1,0 +1,9 @@
+*.db
+*.json
+errorLog.html
+
+HeroWinrateCharts
+Factions
+datafiles
+NTests
+PickrateByWinrateCharts
