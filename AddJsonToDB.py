@@ -145,8 +145,8 @@ count = 0
 print("inserting...")
 crsr.execute('BEGIN TRANSACTION')
 for user in newData:
-    if user == "b1.exe":
-        print("me")
+    # if user == "b1.exe":
+    #     print("me")
     count += 1
     if count % 1000 == 0:
         print(count)
