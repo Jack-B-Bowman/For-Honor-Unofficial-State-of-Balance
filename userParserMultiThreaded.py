@@ -3,16 +3,16 @@ import json
 import time
 import random
 import sys
-from attr import mutable
 import cloudscraper
 import threading
+import os
 
 
 mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 3
+    arg = 4
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -91,6 +91,7 @@ def downloadThread(id):
             try:
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 html_data = session.get(url,timeout=10).text
+
             except Exception as e:
                 print("GET error:\n", e)
                 # failedUsersFile = open("failedUsers.csv","a")
@@ -117,7 +118,10 @@ def downloadThread(id):
         # this simply reconstructs the actual username
         splitUsername = username.split("%20")
         username = " ".join(splitUsername)
-        print(str(num + 1) + " : " + username) # current user
+        mutex.acquire()
+        os.system("cls")
+        print(f"ThreadID : {id}\n  count : {str(num+1)} \n  user : {username}") # current user
+        mutex.release()
 
         # this section would also throw errors occasionally. only happend once in about 5000 attempts though
         try: 
@@ -136,6 +140,12 @@ def downloadThread(id):
             # failedUsersFile.write(platform + "," + username + "\n")
             # failedUsersFile.close()
             print("group error")
+            if len(html_data) < 20:
+                mutex.acquire()
+                failedUsersFile = open("failedUsers.csv","a")
+                failedUsersFile.write(platform + "," + username + "\n")
+                failedUsersFile.close()
+                mutex.release()
             skipUser = True
 
         # this section catches the issue where the server would respond with 404, 500 and things of that nature that had valid inital states 
@@ -934,6 +944,7 @@ def downloadThread(id):
     dataFile.close()
     players = {}
 
+number = len(users)
 
 threads = []
 for n in range(arg):
@@ -941,7 +952,10 @@ for n in range(arg):
     t.start()
     threads.append(t)
 
-
+while True:
+    if (number - len(users)) % 100 == 0:
+        print(f"{number - len(users)} downloaded") 
+        time.sleep(5)
 
 
 

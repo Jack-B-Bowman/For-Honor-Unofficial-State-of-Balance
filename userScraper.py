@@ -32,7 +32,7 @@ def getPage(pageNum):
 
 
 # get and parse all the users from pages 1 to 2368
-for i in range(1,2403):
+for i in range(2403,2437):
     # failed at 938
     users = getPage(i)
     
