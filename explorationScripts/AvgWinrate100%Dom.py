@@ -80,16 +80,16 @@ playerMap = {
 }
 
 playerIDs = []
-
-sql = """
+seasonStartDate = 1655395200
+sql = f"""
 
 SELECT stat.playerID, stat.username, stat.platform, stat.wins as totalWins, stat.losses as totalLosses, mode.wins as domWins, mode.losses as domLosses
  from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Duel' and username in (
  
 SELECT username from 
-(SELECT username, count(username) as num from stat 
+(SELECT username, count(username) as num from (select * from stat where UTCSeconds > {seasonStartDate}) 
 GROUP by username)
-where num > 1
+where num > 1 
 
  )
 ORDER by username

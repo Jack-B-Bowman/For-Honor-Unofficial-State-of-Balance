@@ -2,8 +2,8 @@ import sqlite3
 import random
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
-
-sql = """select username,platform from (select username,platform, count(username) as userCount from stat group by username) where userCount > 1"""
+seasonStartDate = 1655395200
+sql = f"""select username,platform from (select username,platform, count(username) as userCount from stat where UTCSeconds > {seasonStartDate} group by username) where userCount > 1"""
 
 crsr.execute(sql)
 ans = crsr.fetchall()

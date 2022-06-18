@@ -5,7 +5,9 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
-sql = """
+seasonStartDate = 1655395200
+
+sql = f"""
 select name,
        username,
        UTCSeconds,
@@ -23,7 +25,7 @@ from (
          wins,
          losses,
 		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE hero.timePlayed > 20000 )
+  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds > {seasonStartDate} )
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date;
 """

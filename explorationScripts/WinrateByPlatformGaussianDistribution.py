@@ -6,10 +6,12 @@ import numpy as np
 import seaborn as sns
 
 import sqlite3
-conn = sqlite3.connect("D:\\Archive\\UserScraper\\FH-06-11-1.db")
+conn = sqlite3.connect("FH.db")
+
+seasonStartDate = 1655395200
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
-mode = "Duel"
+mode = "Dominion"
 sqlMode = f"""select 
 	   name,
 	   username,
@@ -29,12 +31,12 @@ from (
 		 wins,
 		 losses,
          reputation
-  from (SELECT mode.name,mode.wins,mode.losses, stat.username, stat.platform, stat.UTCSeconds, stat.reputation FROM mode INNER JOIN stat on mode.playerID = stat.playerID  WHERE mode.name = '{mode}')
+  from (SELECT mode.name,mode.wins,mode.losses, stat.username, stat.platform, stat.UTCSeconds, stat.reputation FROM mode INNER JOIN stat on mode.playerID = stat.playerID  WHERE mode.name = '{mode}' and stat.UTCSeconds > {seasonStartDate})
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date
 ORDER BY username"""
 
-sqlTotal = """select 
+sqlTotal = f"""select 
 	   username,
 	   platform,
        UTCSeconds,
@@ -52,7 +54,7 @@ from (
 		 wins,
 		 losses,
 		 reputation
-  from stat
+  from (SELECT * from stat WHERE UTCSeconds > {seasonStartDate})
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date
 ORDER BY username"""

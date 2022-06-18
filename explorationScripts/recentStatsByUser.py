@@ -3,8 +3,9 @@ import numpy as np
 import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
+seasonStartDate = 1655395200
 user = "vincent_van_goy"
-crsr.execute(f"SELECT * from stat where username = '{user}'")
+crsr.execute(f"SELECT * from stat where username = '{user}' and stat.UTCSeconds > {seasonStartDate}")
 ans = crsr.fetchall()
 ans.sort(key=lambda y:y[4])
 last = ans[0]
