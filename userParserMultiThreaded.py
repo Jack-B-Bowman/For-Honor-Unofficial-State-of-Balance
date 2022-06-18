@@ -118,10 +118,9 @@ def downloadThread(id):
         # this simply reconstructs the actual username
         splitUsername = username.split("%20")
         username = " ".join(splitUsername)
-        mutex.acquire()
-        os.system("cls")
+        # mutex.acquire()
         print(f"ThreadID : {id}\n  count : {str(num+1)} \n  user : {username}") # current user
-        mutex.release()
+        # mutex.release()
 
         # this section would also throw errors occasionally. only happend once in about 5000 attempts though
         try: 
@@ -952,10 +951,8 @@ for n in range(arg):
     t.start()
     threads.append(t)
 
-while True:
-    if (number - len(users)) % 100 == 0:
-        print(f"{number - len(users)} downloaded") 
-        time.sleep(5)
+for item in threads:
+    item.join()
 
 
 
