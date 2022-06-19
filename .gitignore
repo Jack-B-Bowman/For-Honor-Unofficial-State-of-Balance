@@ -1,6 +1,7 @@
 *.db
 *.json
-errorLog.html
+*.html
+errorLog
 
 HeroWinrateCharts
 Factions

@@ -120,7 +120,7 @@ def insertHeros(heroStats,hero, lastPlayerID, lastHeroID):
 
 def hasPlayed(user,stat):
     sql = (
-        f"SELECT wins, losses, timePlayed FROM stat WHERE username='{user}' AND platform='{stat['platform']}';"
+        f"SELECT wins, losses, timePlayed, playerID FROM stat WHERE username='{user}' AND platform='{stat['platform']}';"
     )
     crsr.execute(sql)
     ans = crsr.fetchall()
@@ -129,10 +129,17 @@ def hasPlayed(user,stat):
     maxTup = list(map(max, zip(*ans)))
     wins = maxTup[0]
     losses = maxTup[1]
+    playerID = maxTup[3]
     if ans[0] == None:
         return True
     if stat["wins"] > wins or stat["losses"] > losses:
         return True
+    crsr.execute(f"""
+    UPDATE stat 
+    set UTCSeconds = {stat["date"]}
+    where playerID = {playerID}
+    """)
+    return False
 print("merging JSON...")
 newData = mergeJSON("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles")
 
@@ -162,7 +169,7 @@ for user in newData:
             for stat in stats:
                 # start = time.time()
                 if(hasPlayed(user,stat)):
-                    end = time.time()
+                    # end = time.time()
                     # hasPlayedTime += end - start
                     # start = time.time()
                     insertGlobalStats(stat,lastPlayerID,user)
@@ -187,6 +194,7 @@ for user in newData:
                     # end = time.time()
                     # heroTime += end-start
                     lastPlayerID += 1
+
         
 
 

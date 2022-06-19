@@ -5,7 +5,8 @@ import random
 import sys
 import cloudscraper
 import threading
-import os
+import sqlite3
+
 
 
 mutex = threading.Lock()
@@ -59,6 +60,8 @@ for user in nonExistantUsersList:
     failedUsersDict[user] = True
 
 def downloadThread(id):
+    conn = sqlite3.connect("FH.db")
+    crsr = conn.cursor()
     players = {}
     headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36",
             'referer': 'https://magiceden.io/',
@@ -75,18 +78,28 @@ def downloadThread(id):
         mutex.release()
 
         skipUser = False
-
+        timeForUpdate = False
         platform = user[0]
         username = user[1]
 
         splitUsername = username.split("%20")
         fortmattedUN = " ".join(splitUsername)
         
+
+        sql = f"""SELECT username,platform,UTCSeconds from stat where username='{fortmattedUN}' and platform='{platform}'"""
+        crsr.execute(sql)
+        ans = crsr.fetchall()
+        ans.sort(key=lambda y:y[2])
+        if len(ans) > 0:
+            if(time.time() - ans[-1][2] > 86400):
+                timeForUpdate = True
+        else: timeForUpdate = False
+
         lineString = user[0] + "," + fortmattedUN + "\n"
 
         url = ""
         html_data = ""
-        if lineString not in failedUsersDict:
+        if lineString not in failedUsersDict and timeForUpdate:
             # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
             try:
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
@@ -131,15 +144,16 @@ def downloadThread(id):
             data = data["stats"]["standardProfiles"]
         except:
             # mutex.acquire()
-            errorLog = open(f"errorLog-{str(id)}.html","w")
-            errorLog.write(html_data)
-            errorLog.close()
-            # mutex.release()
-            # failedUsersFile = open("failedUsers.csv","a")
-            # failedUsersFile.write(platform + "," + username + "\n")
-            # failedUsersFile.close()
-            print("group error")
-            if len(html_data) < 20:
+            if timeForUpdate:
+                errorLog = open(f"errorLog-{str(id)}.html","w")
+                errorLog.write(html_data)
+                errorLog.close()
+                # mutex.release()
+                # failedUsersFile = open("failedUsers.csv","a")
+                # failedUsersFile.write(platform + "," + username + "\n")
+                # failedUsersFile.close()
+                print("group error")
+            if len(html_data) < 20 and timeForUpdate:
                 mutex.acquire()
                 failedUsersFile = open("failedUsers.csv","a")
                 failedUsersFile.write(platform + "," + username + "\n")
@@ -151,7 +165,7 @@ def downloadThread(id):
         # not the best way to handle it at all but it was the first thing that came to mind
         try:
             lowerCaseUN = username.lower()
-            if data[f"for-honor|{platform}|{lowerCaseUN}"]["status"] != 0: 
+            if data[f"for-honor|{platform}|{lowerCaseUN}"]["status"] != 0 and timeForUpdate: 
                 skipUser = True
                 mutex.acquire()
                 failedUsersFile = open("failedUsers.csv","a")
