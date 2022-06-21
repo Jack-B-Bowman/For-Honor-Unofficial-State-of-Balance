@@ -275,6 +275,9 @@ for hero in names:
 
 y_pos = np.arange(len(names))
 
+winrateMean = np.mean(winrates)
+meanDiff = winrateMean - 50
+winrates = list(map(lambda x: x - meanDiff, winrates))
 
 ax.barh(y_pos, winrates, align='center')
 
@@ -298,7 +301,9 @@ ax.set_xlim(xmin=0)
 ax.set_xlim(xmax=65)
 ax.set_title('What is The Winrate and Pickrate by Hero')
 
-ticks = list(range(0,10)) + list(range(50,70))
+ticks = list(range(0,10)) + list(range(30,70))
+
+print(f"average winrate is off by {meanDiff}%")
 
 plt.xticks(ticks,[str(i) for i in ticks])
 plt.show()

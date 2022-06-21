@@ -57,6 +57,7 @@ nonExistantUsersFile = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScr
 nonExistantUsersList = nonExistantUsersFile.readlines()
 failedUsersDict = {}
 for user in nonExistantUsersList:
+    # realUser = user[:-1]
     failedUsersDict[user] = True
 
 def downloadThread(id):

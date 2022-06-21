@@ -152,7 +152,7 @@ for user in activeUsers:
                 if winRate < 1:
                     print(user)
 
-                if(winRate < 90):
+                if(winRate < 101):
                     userTuple = (last["reputation"],winRate)
                     numUsers += 1
                     if last["platform"] == "psn":
@@ -169,11 +169,11 @@ for user in activeUsers:
                         totalMatchesPC += wins + losses
 
 psnRates =   [i[1] for i in PSNstats]
-print(f"psn std deviation: {np.std(psnRates):.2f} \t mean: {np.mean(psnRates):.2f}")
+print(f"psn std deviation: {np.std(psnRates):.2f} \t mean: {np.median(psnRates):.2f}")
 xblRates =   [i[1] for i in XboxStats]
-print(f"xbl std deviation: {np.std(xblRates):.2f} \t mean: {np.mean(xblRates):.2f}")
+print(f"xbl std deviation: {np.std(xblRates):.2f} \t mean: {np.median(xblRates):.2f}")
 uplayRates = [i[1] for i in PCstats]
-print(f"PC  std deviation: {np.std(uplayRates):.2f} \t mean: {np.mean(uplayRates):.2f}")
+print(f"PC  std deviation: {np.std(uplayRates):.2f} \t mean: {np.median(uplayRates):.2f}")
 
 
 allStats = [psnRates,xblRates,uplayRates]

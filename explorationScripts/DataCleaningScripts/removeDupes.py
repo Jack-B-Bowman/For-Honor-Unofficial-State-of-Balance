@@ -1,5 +1,5 @@
 
-file = open("users3.csv","r")
+file = open("failedUsers.csv","r")
 text = file.readlines()
 file.close()
 users = {}
@@ -10,7 +10,7 @@ for line in text:
     else:
         users[line] = 0
 
-file = open("filteredUsers.csv", "w")
+file = open("failedUsers.csv", "w")
 for line in users:
     file.write(line)
 
