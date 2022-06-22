@@ -93,7 +93,7 @@ def downloadThread(id):
         ans.sort(key=lambda y:y[2])
         if len(ans) > 0:
             if(time.time() - ans[-1][2] > 86400):
-                timeForUpdate = True
+                timeForUpdate = Trueg
         else: timeForUpdate = False
 
         lineString = user[0] + "," + fortmattedUN + "\n"
