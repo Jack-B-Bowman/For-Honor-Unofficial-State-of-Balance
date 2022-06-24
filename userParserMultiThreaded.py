@@ -93,7 +93,7 @@ def downloadThread(id):
         ans.sort(key=lambda y:y[2])
         if len(ans) > 0:
             if(time.time() - ans[-1][2] > 86400):
-                timeForUpdate = Trueg
+                timeForUpdate = True
         else: timeForUpdate = False
 
         lineString = user[0] + "," + fortmattedUN + "\n"
@@ -146,7 +146,7 @@ def downloadThread(id):
         except:
             # mutex.acquire()
             if timeForUpdate:
-                errorLog = open(f"errorLog-{str(id)}.html","w")
+                errorLog = open(f"errorLog.html","a")
                 errorLog.write(html_data)
                 errorLog.close()
                 # mutex.release()
