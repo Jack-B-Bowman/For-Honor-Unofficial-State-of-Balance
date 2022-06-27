@@ -175,6 +175,9 @@ print(f"xbl std deviation: {np.std(xblRates):.2f} \t mean: {np.median(xblRates):
 uplayRates = [i[1] for i in PCstats]
 print(f"PC  std deviation: {np.std(uplayRates):.2f} \t mean: {np.median(uplayRates):.2f}")
 
+print(f"PSN:   {len(psnRates)}")
+print(f"XBL:   {len(xblRates)}")
+print(f"UPLAY: {len(uplayRates)}")
 
 allStats = [psnRates,xblRates,uplayRates]
 colours  = ["blue",  "green", "red"]

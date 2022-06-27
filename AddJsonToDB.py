@@ -149,14 +149,15 @@ heroTime = 0
 hasPlayedTime = 0
 
 count = 0
+playersUpdated = 0
 print("inserting...")
 crsr.execute('BEGIN TRANSACTION')
 for user in newData:
     # if user == "b1.exe":
     #     print("me")
     count += 1
-    if count % 1000 == 0:
-        print(count)
+    if count % 10000 == 0:
+        print(f"{count} --> {playersUpdated}")
         # print(f"insertGlobalTime = {(globalTime):.2f}")
         # print(f"insertModeTime = {(modeTime):.2f}")
         # print(f"insertHerolTime = {(heroTime):.2f}")
@@ -169,6 +170,7 @@ for user in newData:
             for stat in stats:
                 # start = time.time()
                 if(hasPlayed(user,stat)):
+                    playersUpdated+=1
                     # end = time.time()
                     # hasPlayedTime += end - start
                     # start = time.time()

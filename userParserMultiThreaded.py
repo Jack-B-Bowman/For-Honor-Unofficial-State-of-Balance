@@ -949,12 +949,12 @@ def downloadThread(id):
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
                 # time.sleep(random.random())
                 if(num % 100 == 0):
-                    dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\data{str(num + id)}.json","a")
-                    dataFile.write(json.dumps(players, indent=4))
+                    dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\data{str(id)}-{str(num)}.json","a")
+                    dataFile.write(json.dumps(players))
                     dataFile.close() 
                     players = {}
-    dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\dataFinal-{sys.argv[1]}.json","a")
-    dataFile.write(json.dumps(players, indent=4))
+    dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\dataFinal-{id}.json","a")
+    dataFile.write(json.dumps(players))
     dataFile.close()
     players = {}
 
