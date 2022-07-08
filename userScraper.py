@@ -32,7 +32,7 @@ def getPage(pageNum):
 
 
 # get and parse all the users from pages 1 to 2368
-for i in range(2403,2437):
+for i in range(1,2465):
     # failed at 938
     users = getPage(i)
     
@@ -47,7 +47,7 @@ for i in range(2403,2437):
         users = getPage(i)
 
     j=0
-    file = open("usersTesting06-08-1.txt","a")
+    file = open("usersTesting06-27-1.txt","a")
     for user in users:
         j+=1
         # funny html spaghetti parsing

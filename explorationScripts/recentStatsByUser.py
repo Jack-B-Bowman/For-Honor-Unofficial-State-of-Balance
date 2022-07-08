@@ -4,8 +4,8 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 seasonStartDate = 0
-user = "Wassabi FB"
-platform="xbl"
+user = "cowbobman22"
+platform="uplay"
 crsr.execute(f"SELECT * from stat where username = '{user}' and platform='{platform}' and stat.UTCSeconds > {seasonStartDate}")
 ans = crsr.fetchall()
 ans.sort(key=lambda y:y[4])

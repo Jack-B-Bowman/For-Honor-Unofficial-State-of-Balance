@@ -6,18 +6,18 @@ import sys
 import cloudscraper
 import threading
 import sqlite3
-
+# import privacypass
 
 
 mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 4
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\compiledUsers.csv","r")
+userFile = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\compiledUsers-06-27-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
@@ -64,14 +64,24 @@ def downloadThread(id):
     conn = sqlite3.connect("FH.db")
     crsr = conn.cursor()
     players = {}
-    headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36",
-            'referer': 'https://magiceden.io/',
-             'accept': 'application/json'}
-    session = cloudscraper.create_scraper(browser={
-            'browser': 'firefox',
-            'platform': 'windows',
-            'desktop': True
-        },delay=10)
+    head = {
+    "cookie": "__cf_bm=2ka4FwOsnbf0_BVmL5cnwPNpl2Zyx6RfDVAubQrAV6A-1656514882-0-AWC2l5sNPps0UHVWjatanw5KLf%2BiIVqzoF44o2Q%2FKtVTGbbosllZHYGMm04f2Ua7jG9R9I2BD0Yx3coZJ87gptU%3D",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Origin": "https://tracker.gg",
+    "DNT": "1",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-site",
+    "Referer": "https://tracker.gg/",
+    "Connection": "keep-alive",
+    "Cookie": "cf_clearance=0ypl8bqVQgI.6fopu3u4f.ZVx6eNQbCa0d1s6ozrOlk-1651883599-0-250; _ga=GA1.2.930856034.1651883756; __gads=ID=48b27d6d5b3f82fd:T=1651883761:S=ALNI_Mbs2XuTT0zo-QPmFkvTirS2ll7Jow; __gpi=UID=000004bc42b78fbd:T=1651883761:RT=1651926991:S=ALNI_MbWpZiUXXJUMKt_HRmkH3BLlFoYew; __cflb=02DiuFQAkRrzD1P1mdm8JatZXtAyjoPD1d6jkXqEEyTat; __cf_bm=2eMFXpqSXogz0GKGgjK45qLqEFanqQO3anle.88iTAw-1656514851-0-AQoMY8GGQw64NApxspAvMqqQYphBhJRTNoeHiZpF0W3b9HG3kvZYyqN47lUYz4z1F1RCXrBjZWOsfrXIB1UhFx0=; X-Mapping-Server=s14",
+    "TE": "trailers",
+    "If-Modified-Since": "Wed, 29 Jun 2022 14:44:05 GMT"
+}   
+    scraper = cloudscraper.create_scraper(debug=True)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -92,9 +102,11 @@ def downloadThread(id):
         ans = crsr.fetchall()
         ans.sort(key=lambda y:y[2])
         if len(ans) > 0:
-            if(time.time() - ans[-1][2] > 86400):
+            if(time.time() - ans[-1][2] > (86400 * 0.5)):
                 timeForUpdate = True
-        else: timeForUpdate = False
+            else: timeForUpdate = False
+        if len(ans) == 0:
+            timeForUpdate = True
 
         lineString = user[0] + "," + fortmattedUN + "\n"
 
@@ -104,7 +116,7 @@ def downloadThread(id):
             # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
             try:
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
-                html_data = session.get(url,timeout=10).text
+                html_data = scraper.get(url,timeout=10).text
 
             except Exception as e:
                 print("GET error:\n", e)
@@ -121,7 +133,7 @@ def downloadThread(id):
             time.sleep(10)
             print("error on " + username)
             url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
-            html_data = session.get(url,timeout=20).text
+            html_data = scraper.get(url,timeout=20).text
             attempts += 1
             if attempts >= 5:
                 skipUser = True
@@ -154,10 +166,10 @@ def downloadThread(id):
                 # failedUsersFile.write(platform + "," + username + "\n")
                 # failedUsersFile.close()
                 print("group error")
-            if len(html_data) < 20 and timeForUpdate:
+            if len(html_data) < 20 and timeForUpdate and lineString not in failedUsersDict:
                 mutex.acquire()
                 failedUsersFile = open("failedUsers.csv","a")
-                failedUsersFile.write(platform + "," + username + "\n")
+                # failedUsersFile.write(platform + "," + username + "\n")
                 failedUsersFile.close()
                 mutex.release()
             skipUser = True
@@ -166,11 +178,11 @@ def downloadThread(id):
         # not the best way to handle it at all but it was the first thing that came to mind
         try:
             lowerCaseUN = username.lower()
-            if data[f"for-honor|{platform}|{lowerCaseUN}"]["status"] != 0 and timeForUpdate: 
+            if data[f"for-honor|{platform}|{lowerCaseUN}"]["status"] != 0 and timeForUpdate and lineString not in failedUsersDict: 
                 skipUser = True
                 mutex.acquire()
                 failedUsersFile = open("failedUsers.csv","a")
-                failedUsersFile.write(platform + "," + username + "\n")
+                # failedUsersFile.write(platform + "," + username + "\n")
                 failedUsersFile.close()
                 mutex.release()
                 print(username + " : status error")
@@ -953,6 +965,7 @@ def downloadThread(id):
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
                     players = {}
+        time.sleep(600)
     dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\dataFinal-{id}.json","a")
     dataFile.write(json.dumps(players))
     dataFile.close()

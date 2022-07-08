@@ -6,6 +6,7 @@ filesToMerge = [
     "UserFiles\\users2.csv",
     "UserFiles\\users3.csv",
     "UserFiles\\users4.csv",
+    "UserFiles\\users5.csv",
     "compiledUsers.csv"
 ]
 

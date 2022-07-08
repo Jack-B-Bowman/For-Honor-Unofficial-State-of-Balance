@@ -9,6 +9,7 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 
 seasonStartDate = 1655395200
+# seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 mode = "Dominion"
@@ -62,6 +63,8 @@ ORDER BY username"""
 crsr.execute(sqlMode)
 
 ans = crsr.fetchall()
+
+playersOver80 = {}
 
 activeUsers = {}
 counter = 0
@@ -149,8 +152,8 @@ for user in activeUsers:
 
                 winRate = (wins/(wins + losses)) * 100
 
-                if winRate < 1:
-                    print(user)
+                if winRate >= 80:
+                    playersOver80[user] = activeUsers[user]
 
                 if(winRate < 101):
                     userTuple = (last["reputation"],winRate)
@@ -198,3 +201,5 @@ plt.xlabel("Winrate (%)")
 plt.legend()
 plt.show()
 print(numUsers)
+file = open(".\\preComputedDatafiles\\playersOver80.json","w")
+file.write(json.dumps(playersOver80,indent=4))
