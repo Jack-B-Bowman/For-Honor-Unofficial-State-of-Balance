@@ -54,11 +54,14 @@ def downloadThread(id):
     players = {}
     data = {}
     opts = uc.ChromeOptions()
-    opts.headless = True
-    opts.add_argument('--headless')
+    # opts.headless = True
+    # opts.add_argument('--headless')
+    # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
+    # opts.add_argument("--unsafe-pac-url")  
 
     driver = uc.Chrome(options=opts, use_subprocess=True)
+    time.sleep(180)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -108,8 +111,11 @@ def downloadThread(id):
             # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
             try:
                 url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?'
+                # url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 driver.get(url)
+                num += 1
                 pre = driver.find_element(by=By.TAG_NAME,value="pre").text
+                print(pre)
                 html_data = json.loads(pre)
                 if 'errors' in html_data:
                     mutex.acquire()
@@ -129,6 +135,7 @@ def downloadThread(id):
                 # failedUsersFile.write(platform + "," + username + "," + str(e))
                 # failedUsersFile.close()
                 skipUser = True
+                time.sleep(300)
         else:
             skipUser = True
         
@@ -912,12 +919,14 @@ def downloadThread(id):
                             stats["modes"][mode]["assists"]= modeStats["assistsP"]["value"]
                             stats["modes"][mode]["time"]   = modeStats["timePlayed"]["value"]
                 
-                num += 1
+                # num += 1
                 
                 players[username][platform].append(stats)
                 stats = {}
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                time.sleep(random.random(30,60))
+                time.sleep(15)
+                # if num % 30 == 0:
+                #     time.sleep(60)
                 if(num % 100 == 0):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
@@ -936,6 +945,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
+    time.sleep(180)
 
 for item in threads:
     item.join()
