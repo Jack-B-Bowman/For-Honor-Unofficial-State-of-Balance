@@ -31,27 +31,27 @@ def getStatByUsername(username,platform):
             # if the difference in time is < 0 then all stats from the later should be smaller than the former      
             if deltaTime < 0:
                 if any(x > y for x, y in zip(current[5:], previous[5:])):
-                    anomolies.append((current[1], previous[0],"negative time stat anomoly"))
+                    anomolies.append((current[1], previous[0],"negative time stat anomoly",previous[4]))
             # if the difference in time is > 0 then all stats from the later should be larger than the former      
             elif deltaTime > 0:
                 numDays = deltaTime / day 
                 if any(x < y for x, y in zip(current[5:], previous[5:])):
-                    anomolies.append((current[1], current[0],"positive time stat anomoly"))
+                    anomolies.append((current[1], current[0],"positive time stat anomoly",previous[4]))
                 elif numDays > 1:
                     if deltaRep / numDays > 15:
-                        anomolies.append((current[1], current[0],f"{(deltaRep / numDays):.2f} per day rep gain stat anomoly"))
+                        anomolies.append((current[1], current[0],f"{(deltaRep / numDays):.2f} per day rep gain stat anomoly", current[4]))
                     elif deltaK / numDays > 1000:
-                        anomolies.append((current[1], current[0],f"{(deltaK / numDays):.2f} per day kill gain stat anomoly"))           
+                        anomolies.append((current[1], current[0],f"{(deltaK / numDays):.2f} per day kill gain stat anomoly", current[4]))           
                     elif deltaD / numDays > 1000:
-                        anomolies.append((current[1], current[0],f"{(deltaD / numDays):.2f} per day death gain stat anomoly"))  
+                        anomolies.append((current[1], current[0],f"{(deltaD / numDays):.2f} per day death gain stat anomoly", current[4]))  
                     elif deltaA / numDays > 3000:
-                        anomolies.append((current[1], current[0],f"{(deltaA / numDays):.2f} per day assist gain stat anomoly"))  
+                        anomolies.append((current[1], current[0],f"{(deltaA / numDays):.2f} per day assist gain stat anomoly", current[4]))  
                     elif deltaW / numDays > 300:
-                        anomolies.append((current[1], current[0],f"{(deltaW / numDays):.2f} per day win gain stat anomoly"))  
+                        anomolies.append((current[1], current[0],f"{(deltaW / numDays):.2f} per day win gain stat anomoly", current[4]))  
                     elif deltaL / numDays > 300:
-                        anomolies.append((current[1], current[0],f"{(deltaL / numDays):.2f} per day loss gain stat anomoly"))  
+                        anomolies.append((current[1], current[0],f"{(deltaL / numDays):.2f} per day loss gain stat anomoly", current[4]))  
                     elif deltaT / numDays > day/2:
-                        anomolies.append((current[1], current[0],f"{(deltaT / numDays):.2f} per day time gain stat anomoly"))  
+                        anomolies.append((current[1], current[0],f"{(deltaT / numDays):.2f} per day time gain stat anomoly", current[4]))  
 getUsernames = """SELECT DISTINCT username,platform from stat"""
 crsr.execute(getUsernames)
 allUsernames = crsr.fetchall()
@@ -60,7 +60,7 @@ for username in allUsernames:
 
 file = open("anomolies.txt","w")
 for anomoly in anomolies:
-    file.write(f"{anomoly[0]}, {anomoly[1]}, {anomoly[2]} \n")
+    file.write(f"{anomoly[0]},{anomoly[1]},{anomoly[2]},{anomoly[3]}\n")
 file.close()
 
 # for anomoly in anomolies:

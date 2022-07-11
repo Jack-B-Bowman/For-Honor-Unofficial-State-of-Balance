@@ -5,11 +5,12 @@ import sys
 import threading
 import sqlite3
 import undetected_chromedriver as uc
+from selenium.webdriver.common.by import By
 mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 2
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -101,7 +102,7 @@ def downloadThread(id):
             try:
                 url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?'
                 driver.get(url)
-                pre = driver.find_element_by_tag_name("pre").text
+                pre = driver.find_element(by=By.TAG_NAME, value="pre").text
                 html_data = json.loads(pre)
                 if 'errors' in html_data:
                     mutex.acquire()
@@ -902,7 +903,7 @@ def downloadThread(id):
                 players[username][platform].append(stats)
                 stats = {}
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                # time.sleep(random.random())
+                time.sleep(11)
                 if(num % 100 == 0):
                     dataFile = open(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))

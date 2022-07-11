@@ -5,7 +5,8 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
-seasonStartDate = 1655395200
+seasonStartDate = 1655395200 # true season start
+# seasonStartDate = 1656547619 # post conq nerf 
 
 sql = f"""
 select name,
