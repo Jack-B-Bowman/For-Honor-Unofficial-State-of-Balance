@@ -10,7 +10,7 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 2
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -61,7 +61,7 @@ def downloadThread(id):
     # opts.add_argument("--unsafe-pac-url")  
 
     driver = uc.Chrome(options=opts, use_subprocess=True)
-    time.sleep(180)
+    time.sleep(60)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -110,8 +110,9 @@ def downloadThread(id):
         if lineString not in failedUsersDict and timeForUpdate:
             # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
             try:
-                url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?'
+                url = f'http://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
                 # url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
+                print(url)
                 driver.get(url)
                 num += 1
                 pre = driver.find_element(by=By.TAG_NAME,value="pre").text
@@ -924,7 +925,7 @@ def downloadThread(id):
                 players[username][platform].append(stats)
                 stats = {}
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                time.sleep(15)
+                time.sleep(2)
                 # if num % 30 == 0:
                 #     time.sleep(60)
                 if(num % 100 == 0):
