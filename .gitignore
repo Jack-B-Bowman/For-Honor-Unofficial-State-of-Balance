@@ -1,6 +1,7 @@
 *.db
 *.json
 *.html
+*.7z
 errorLog
 
 HeroWinrateCharts
