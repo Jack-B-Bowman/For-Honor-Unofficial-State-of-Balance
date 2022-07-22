@@ -141,7 +141,7 @@ def hasPlayed(user,stat):
     """)
     return False
 print("merging JSON...")
-newData = mergeJSON("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles")
+newData = mergeJSON("datafiles")
 
 globalTime = 0
 modeTime = 0

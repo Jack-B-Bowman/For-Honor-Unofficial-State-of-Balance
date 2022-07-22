@@ -61,7 +61,7 @@ def downloadThread(id):
     # opts.add_argument("--unsafe-pac-url")  
 
     driver = uc.Chrome(options=opts, use_subprocess=True)
-    time.sleep(60)
+    # time.sleep(60)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -87,18 +87,21 @@ def downloadThread(id):
         if len(ans) > 0: 
             # is the player inactive
             if len(ans) == 1:
+                timeForUpdate = False
                 # if the player exists and is inactive update them once every 2 weeks
-                if(time.time() - ans[-1][2] > (86400 * 14)):
-                    timeForUpdate = True
+                # if(time.time() - ans[-1][2] > (86400 * 14)):
+                    # timeForUpdate = True
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
                 if timeBetweenUpdates > 86400 * 30:
-                    if(time.time() - ans[-1][2] > (86400 * 7)):
+                    if(time.time() - ans[-1][2] > (86400 * 30)):
+                    # if(time.time() - ans[-1][2] > (86400 * 7)):
                         timeForUpdate = True
                 # if the player has played in the last 30 days update them once a day
                 else:
-                    if(time.time() - ans[-1][2] > (86400 * 1)):
+                    if(time.time() - ans[-1][2] > (86400 * 30)):
+                    # if(time.time() - ans[-1][2] > (86400 * 1)):
                         timeForUpdate = True
         if len(ans) == 0:
             timeForUpdate = True
@@ -110,10 +113,12 @@ def downloadThread(id):
         if lineString not in failedUsersDict and timeForUpdate:
             # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
             try:
-                url = f'http://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
+                url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
                 # url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
+                # https://api.tracker.gg/api/v1/for-honor/search/by-query/vincent_van_goy"
                 driver.get(url)
+                time.sleep(5)
                 num += 1
                 pre = driver.find_element(by=By.TAG_NAME,value="pre").text
                 print(pre)
@@ -136,7 +141,7 @@ def downloadThread(id):
                 # failedUsersFile.write(platform + "," + username + "," + str(e))
                 # failedUsersFile.close()
                 skipUser = True
-                time.sleep(300)
+                time.sleep(120)
         else:
             skipUser = True
         
@@ -925,10 +930,9 @@ def downloadThread(id):
                 players[username][platform].append(stats)
                 stats = {}
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                time.sleep(2)
-                # if num % 30 == 0:
-                #     time.sleep(60)
-                if(num % 100 == 0):
+                if num % 10 == 0:
+                    time.sleep(100)
+                if(num % 50 == 0):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
