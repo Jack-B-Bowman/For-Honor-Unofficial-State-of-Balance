@@ -289,10 +289,13 @@ def downloadThread(id):
                 "uplay" : []
                 }
 
+                pretime = time.time()
                 overviewData = parseOverview(username=FormattedUsername,platform=platform,overviewTxt=overview)
                 overviewData['modes'] = parseModes(modes)
                 overviewData['heros'] = parseHeros(heros)
                 players[username][platform].append(overviewData)
+                posttime = time.time()
+                print(f"{posttime - pretime:.2f}")
                 num += 1
                 print(players[username])
                 print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {username}") # current user
