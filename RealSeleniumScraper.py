@@ -270,7 +270,7 @@ def downloadThread(id):
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
-                time.sleep(0.5)
+                time.sleep(3)
                 overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                 tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
                 tabs[1].click()
