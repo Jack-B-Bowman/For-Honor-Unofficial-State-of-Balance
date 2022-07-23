@@ -271,7 +271,6 @@ def downloadThread(id):
                 print(url)
                 driver.get(url)
                 time.sleep(0.5)
-                num += 1
                 overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                 tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
                 tabs[1].click()
@@ -319,14 +318,8 @@ def downloadThread(id):
                         mutex.release()
                 except:   
                     print("GET error:\n", e)
-                skipUser = True
-        else:
-            skipUser = True
+
         
-        # mutex.acquire()
-        if timeForUpdate and not skipUser:
-            print(f"ThreadID : {id}\n  count : {str(num+1)} \n  user : {username}") # current user
-        # mutex.release()
 
 
     dataFile = open(f".\\datafiles\\dataFinal-{id}.json","a")
