@@ -217,7 +217,8 @@ def downloadThread(id):
     # opts.add_argument("--unsafe-pac-url")  
 
     driver = uc.Chrome(options=opts, use_subprocess=True)
-    time.sleep(2)
+    driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
+    time.sleep(20)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -245,7 +246,8 @@ def downloadThread(id):
             if len(ans) == 1:
                 # if the player exists and is inactive update them once every 2 weeks
                 if(time.time() - ans[-1][2] > (86400 * 14)):
-                    timeForUpdate = True
+                    # timeForUpdate = True
+                    timeForUpdate = False
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
@@ -254,7 +256,7 @@ def downloadThread(id):
                         timeForUpdate = True
                 # if the player has played in the last 30 days update them once a day
                 else:
-                    if(time.time() - ans[-1][2] > (86400 * 1)):
+                    if(time.time() - ans[-1][2] > (86400 * 7)):
                         timeForUpdate = True
         if len(ans) == 0:
             timeForUpdate = True
@@ -270,14 +272,14 @@ def downloadThread(id):
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
-                time.sleep(3)
+                time.sleep(0.6)
                 overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                 tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
                 tabs[1].click()
-                time.sleep(0.5)
+                time.sleep(0.2)
                 heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
                 tabs[2].click()
-                time.sleep(0.5)
+                time.sleep(0.2)
                 modes = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small").text
 
                 splitUsername = username.split("%20")
@@ -305,7 +307,6 @@ def downloadThread(id):
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
                     players = {}
-                    time.sleep(60)
 
 
                 
@@ -321,6 +322,7 @@ def downloadThread(id):
                         mutex.release()
                 except:   
                     print("GET error:\n", e)
+                    time.sleep(300)
 
         
 
