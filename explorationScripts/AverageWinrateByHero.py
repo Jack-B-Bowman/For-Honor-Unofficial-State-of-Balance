@@ -1,4 +1,5 @@
 import json
+import csv
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
@@ -7,6 +8,8 @@ crsr = conn.cursor()
 
 seasonStartDate = 1655395200 # true season start
 # seasonStartDate = 1656547619 # post conq nerf 
+
+brokenPlayers = []
 
 sql = f"""
 select name,
@@ -228,18 +231,21 @@ for user in activeUsers:
             # if modeDiff > totalDiff * 0.5:
             if True:
                 for hero in first["heros"]:
-                    x = last["heros"][hero]["wins"] 
-                    y = first["heros"][hero]["wins"]
-                    winsDif   = last["heros"][hero]["wins"]   - first["heros"][hero]["wins"]
-                    lossesDif = last["heros"][hero]["losses"] - first["heros"][hero]["losses"]
-                    totalMatches += winsDif + lossesDif                      
+                    if hero in last["heros"]:
+                        x = last["heros"][hero]["wins"] 
+                        y = first["heros"][hero]["wins"]
+                        winsDif   = last["heros"][hero]["wins"]   - first["heros"][hero]["wins"]
+                        lossesDif = last["heros"][hero]["losses"] - first["heros"][hero]["losses"]
+                        totalMatches += winsDif + lossesDif                      
 
-                    theMap2[hero]["wins"] += winsDif
-                    theMap2[hero]["losses"] += lossesDif
-                    
-                    if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 10 and last["heros"][hero]["time"] > 20000):  
-                        totalUsers += 1
-                        theMap[hero].append(winsDif/(winsDif + lossesDif))
+                        theMap2[hero]["wins"] += winsDif
+                        theMap2[hero]["losses"] += lossesDif
+                        
+                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 10 and last["heros"][hero]["time"] > 20000):  
+                            totalUsers += 1
+                            theMap[hero].append(winsDif/(winsDif + lossesDif))
+                    else:
+                        brokenPlayers.append(f"{user},{platform},{hero}\n")
 print("n = " + str(totalMatches))
 print("number of players = " + str(totalUsers))
 print("winrate")
@@ -308,3 +314,7 @@ print(f"average winrate is off by {meanDiff}%")
 
 plt.xticks(ticks,[str(i) for i in ticks])
 plt.show()
+
+file = open("brokenUsers.csv","w")
+file.writelines(brokenPlayers)
+file.close()

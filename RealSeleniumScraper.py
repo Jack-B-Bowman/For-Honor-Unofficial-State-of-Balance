@@ -131,7 +131,9 @@ def parseHeros(herosTxt):
     }
     heros = {}
     currentHero = ""
+    done = False
     for i in range(len(splitText)):
+        
         item = splitText[i]
         if item in heroNames:
             currentHero = heroNames[item]
@@ -147,18 +149,24 @@ def parseHeros(herosTxt):
                         timeInSeconds += 60 * textToInt(part[:-1])
                     if re.match(r"^.*s$", part):
                         timeInSeconds += 1 * textToInt(part[:-1])
-                heros[currentHero]['time'] = timeInSeconds
+                if 'time' not in heros[currentHero]:
+                    heros[currentHero]['time'] = timeInSeconds
 
             elif re.match(r"^Wins$", item):
-                heros[currentHero]['wins'] = textToInt(splitText[i+1])
-            elif re.match(r"^Losses$", item):
-                heros[currentHero]['losses'] = textToInt(splitText[i+1])
+                if 'wins' not in heros[currentHero]:
+                    heros[currentHero]['wins'] = textToInt(splitText[i+1])
+            elif re.match(r"^Losses$", item) and not done:
+                if 'losses' not in heros[currentHero]:
+                    heros[currentHero]['losses'] = textToInt(splitText[i+1])
             elif re.match(r"^Kills \(Player\)$", item):
-                heros[currentHero]['kills'] = textToInt(splitText[i+1])
+                if 'kills' not in heros[currentHero]:
+                    heros[currentHero]['kills'] = textToInt(splitText[i+1])
             elif re.match(r"^Deaths \(Player\)$", item):
-                heros[currentHero]['deaths'] = textToInt(splitText[i+1])
+                if 'deaths' not in heros[currentHero]:
+                    heros[currentHero]['deaths'] = textToInt(splitText[i+1])
             elif re.match(r"^Assists \(Player\)$", item):
-                heros[currentHero]['assists'] = textToInt(splitText[i+1])
+                if 'assists' not in heros[currentHero]:
+                    heros[currentHero]['assists'] = textToInt(splitText[i+1])
 
     return heros
 
@@ -211,14 +219,16 @@ def downloadThread(id):
     data = {}
     opts = uc.ChromeOptions()
     # opts.headless = True
-    # opts.add_argument('--headless')
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    opts.add_experimental_option("prefs", prefs)
+    opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
 
     driver = uc.Chrome(options=opts, use_subprocess=True)
-    driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
-    time.sleep(20)
+    # driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
+    # time.sleep(20)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -266,9 +276,11 @@ def downloadThread(id):
         url = ""
         html_data = ""
         if lineString not in failedUsersDict and timeForUpdate:
-            
+            startTime = time.time()
             try:
                 # url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
+                # platform = "psn"
+                # username = "A51_funtanir"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
@@ -278,9 +290,11 @@ def downloadThread(id):
                 tabs[1].click()
                 time.sleep(0.2)
                 heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
+                # print(heros)
                 tabs[2].click()
                 time.sleep(0.2)
                 modes = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small").text
+                # print(modes)
 
                 splitUsername = username.split("%20")
                 FormattedUsername = " ".join(splitUsername)
@@ -320,9 +334,13 @@ def downloadThread(id):
                         failedUsersFile.write(platform + "," + username + "\n")
                         failedUsersFile.close()
                         mutex.release()
+                        time.sleep(1)
                 except:   
                     print("GET error:\n", e)
                     time.sleep(300)
+            
+            endTime = time.time()
+            print(f"T = {(endTime - startTime):.2f}")
 
         
 
