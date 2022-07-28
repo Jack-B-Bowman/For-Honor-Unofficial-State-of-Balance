@@ -280,8 +280,8 @@ def downloadThread(id):
             startTime = time.time()
             try:
                 # url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
-                platform = "uplay"
-                username = "Ching_Loong"
+                # platform = "uplay"
+                # username = "Ching_Loong"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
