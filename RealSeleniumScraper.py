@@ -127,7 +127,8 @@ def parseHeros(herosTxt):
                 "Warden" : "Warden" ,
                 "Warlord" : "Warlord" ,
                 "Warmonger" : "Warmonger" ,
-                "Zhanhu" : "Zhanhu"
+                "Zhanhu" : "Zhanhu",
+                "OutlandersH031Medjay" : "Medjay"
     }
     heros = {}
     currentHero = ""
@@ -279,8 +280,8 @@ def downloadThread(id):
             startTime = time.time()
             try:
                 # url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
-                # platform = "psn"
-                # username = "A51_funtanir"
+                platform = "uplay"
+                username = "Ching_Loong"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)

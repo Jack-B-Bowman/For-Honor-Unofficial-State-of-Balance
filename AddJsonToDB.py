@@ -39,7 +39,11 @@ def mergeJSON(dir,originalFilePath=""):
         # checking if it is a file
         if os.path.isfile(f) and f[-4:] == 'json':
             file = open(f,"r")
-            newData = json.load(file)
+            try:
+                newData = json.load(file)
+            except Exception as e:
+                print(e)
+                print(filename)
             for user in newData:
                 count += 1
 
@@ -141,7 +145,7 @@ def hasPlayed(user,stat):
     """)
     return False
 print("merging JSON...")
-newData = mergeJSON("datafiles")
+newData = mergeJSON("datafiles\\New folder")
 
 globalTime = 0
 modeTime = 0

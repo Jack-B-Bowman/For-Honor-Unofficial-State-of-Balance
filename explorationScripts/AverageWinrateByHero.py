@@ -151,7 +151,8 @@ theMap = {
 "Warden" : [],
 "Warlord" : [],
 "Warmonger" : [],
-"Zhanhu" : []
+"Zhanhu" : [],
+"Medjay" : []
 }
 
 theMap2 = {
@@ -184,7 +185,8 @@ theMap2 = {
 "Warden" : {"wins": 0, "losses": 0},
 "Warlord" : {"wins": 0, "losses": 0},
 "Warmonger" : {"wins": 0, "losses": 0},
-"Zhanhu" : {"wins": 0, "losses": 0}
+"Zhanhu" : {"wins": 0, "losses": 0},
+"Medjay" : {"wins": 0, "losses": 0}
 }
 
 # file = open("updatedUserStats04-28-2.json","r")
@@ -251,8 +253,10 @@ print("number of players = " + str(totalUsers))
 print("winrate")
 winrateList = []
 for hero in theMap:
-    winRate = (np.mean(theMap[hero])) * 100
+    # winRate = (np.mean(theMap[hero])) * 100
+    winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
     winrateList.append((hero,winRate, (theMap2[hero]["wins"] + theMap2[hero]["losses"])))
+    # winrateList.append((hero,winRate,len(theMap[hero])))
     # print(f"{hero} : {winRate:.2f}%")
 
 winrateList.sort(key=lambda y:y[1])
