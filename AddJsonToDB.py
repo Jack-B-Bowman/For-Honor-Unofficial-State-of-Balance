@@ -145,7 +145,7 @@ def hasPlayed(user,stat):
     """)
     return False
 print("merging JSON...")
-newData = mergeJSON("datafiles\\New folder")
+newData = mergeJSON("datafiles")
 
 globalTime = 0
 modeTime = 0

@@ -11,7 +11,7 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 1
+    arg = 3
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -198,18 +198,25 @@ def parseModes(modesTxt):
                         timeInSeconds += 60 * textToInt(part[:-1])
                     if re.match(r"^.*s$", part):
                         timeInSeconds += 1 * textToInt(part[:-1])
-                modes[currentMode]['time'] = timeInSeconds
+                
+                if 'time' not in modes[currentMode]:
+                    modes[currentMode]['time'] = timeInSeconds
 
             elif re.match(r"^Wins$", item):
-                modes[currentMode]['wins'] = textToInt(splitText[i+1])
+                if 'wins' not in modes[currentMode]:
+                    modes[currentMode]['wins'] = textToInt(splitText[i+1])
             elif re.match(r"^Losses$", item):
-                modes[currentMode]['losses'] = textToInt(splitText[i+1])
+                if 'losses' not in modes[currentMode]:
+                    modes[currentMode]['losses'] = textToInt(splitText[i+1])
             elif re.match(r"^Kills \(Player\)$", item):
-                modes[currentMode]['kills'] = textToInt(splitText[i+1])
+                if 'kills' not in modes[currentMode]:
+                    modes[currentMode]['kills'] = textToInt(splitText[i+1])
             elif re.match(r"^Deaths \(Player\)$", item):
-                modes[currentMode]['deaths'] = textToInt(splitText[i+1])
+                if 'deaths' not in modes[currentMode]:
+                    modes[currentMode]['deaths'] = textToInt(splitText[i+1])
             elif re.match(r"^Assists \(Player\)$", item):
-                modes[currentMode]['assists'] = textToInt(splitText[i+1])  
+                if 'assists' not in modes[currentMode]:
+                    modes[currentMode]['assists'] = textToInt(splitText[i+1])  
 
     return modes
 
@@ -221,8 +228,8 @@ def downloadThread(id):
     opts = uc.ChromeOptions()
     # opts.headless = True
     prefs = {"profile.managed_default_content_settings.images": 2}
-    opts.add_experimental_option("prefs", prefs)
-    opts.add_argument('--headless')
+    # opts.add_experimental_option("prefs", prefs)
+    # opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
@@ -258,7 +265,7 @@ def downloadThread(id):
                 # if the player exists and is inactive update them once every 2 weeks
                 if(time.time() - ans[-1][2] > (86400 * 14)):
                     # timeForUpdate = True
-                    timeForUpdate = False
+                    timeForUpdate = True
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
@@ -285,16 +292,20 @@ def downloadThread(id):
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
-                time.sleep(0.6)
+                time.sleep(0.5)
                 overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
+                print(1)
                 tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
                 tabs[1].click()
-                time.sleep(0.2)
+                time.sleep(0.5)
                 heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
+                print(2)
+
                 # print(heros)
                 tabs[2].click()
-                time.sleep(0.2)
+                time.sleep(1)
                 modes = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small").text
+                print(3)
                 # print(modes)
 
                 splitUsername = username.split("%20")
@@ -307,9 +318,13 @@ def downloadThread(id):
                 }
 
                 pretime = time.time()
+                print(3.5)
                 overviewData = parseOverview(username=FormattedUsername,platform=platform,overviewTxt=overview)
+                print(4)
                 overviewData['modes'] = parseModes(modes)
+                print(4.5)
                 overviewData['heros'] = parseHeros(heros)
+                print(5)
                 players[username][platform].append(overviewData)
                 posttime = time.time()
                 print(f"{posttime - pretime:.2f}")
@@ -321,6 +336,7 @@ def downloadThread(id):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
+                    time.sleep(60)
                     players = {}
 
 
@@ -362,7 +378,6 @@ for n in range(arg):
 
 for item in threads:
     item.join()
-
 
 
 
