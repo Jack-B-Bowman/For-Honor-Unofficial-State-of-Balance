@@ -6,8 +6,9 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
-seasonStartDate = 1655395200 # true season start
+# seasonStartDate = 1655395200 # true season start
 # seasonStartDate = 1656547619 # post conq nerf 
+seasonStartDate = 1658970014
 
 brokenPlayers = []
 
@@ -253,8 +254,8 @@ print("number of players = " + str(totalUsers))
 print("winrate")
 winrateList = []
 for hero in theMap:
-    # winRate = (np.mean(theMap[hero])) * 100
-    winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
+    winRate = (np.mean(theMap[hero])) * 100
+    # winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
     winrateList.append((hero,winRate, (theMap2[hero]["wins"] + theMap2[hero]["losses"])))
     # winrateList.append((hero,winRate,len(theMap[hero])))
     # print(f"{hero} : {winRate:.2f}%")
@@ -286,9 +287,9 @@ for hero in names:
 
 y_pos = np.arange(len(names))
 
-winrateMean = np.mean(winrates)
-meanDiff = winrateMean - 50
-winrates = list(map(lambda x: x - meanDiff, winrates))
+# winrateMean = np.mean(winrates)
+# meanDiff = winrateMean - 50
+# winrates = list(map(lambda x: x - meanDiff, winrates))
 
 ax.barh(y_pos, winrates, align='center')
 
@@ -314,7 +315,7 @@ ax.set_title('What is The Winrate and Pickrate by Hero')
 
 ticks = list(range(0,10)) + list(range(30,70))
 
-print(f"average winrate is off by {meanDiff}%")
+# print(f"average winrate is off by {meanDiff}%")
 
 plt.xticks(ticks,[str(i) for i in ticks])
 plt.show()
@@ -322,3 +323,5 @@ plt.show()
 file = open("brokenUsers.csv","w")
 file.writelines(brokenPlayers)
 file.close()
+
+

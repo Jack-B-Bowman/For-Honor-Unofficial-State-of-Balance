@@ -9,6 +9,8 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 
 seasonStartDate = 1655395200
+# seasonStartDate = 1658970014
+
 # seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
@@ -132,7 +134,7 @@ numOver60 = {"xbl" : 0,
                  "uplay": 0
                  }
 
-percenters50 = {}
+numberOfMatches = []
 
 numUsers = 0
 
@@ -148,14 +150,14 @@ for user in activeUsers:
             losses = last["losses"] - first["losses"]
             # wins = first["wins"]
             # losses = first["losses"]
-            if wins + losses > 30:
-
+            if wins + losses > 20:
+                numberOfMatches.append(wins + losses)
                 winRate = (wins/(wins + losses)) * 100
 
                 if winRate >= 80:
                     playersOver80[user] = activeUsers[user]
 
-                if(winRate < 101):
+                if(winRate < 101 and winRate > 0):
                     userTuple = (last["reputation"],winRate)
                     numUsers += 1
                     if last["platform"] == "psn":
@@ -170,6 +172,8 @@ for user in activeUsers:
                         PCstats.append(userTuple)
                         totalUsersPC += 1
                         totalMatchesPC += wins + losses
+
+print(f"average matches played = {np.median(numberOfMatches)}")
 
 psnRates =   [i[1] for i in PSNstats]
 print(f"psn std deviation: {np.std(psnRates):.2f} \t mean: {np.median(psnRates):.2f}")

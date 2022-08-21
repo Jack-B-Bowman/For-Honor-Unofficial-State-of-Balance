@@ -11,7 +11,7 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 3
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -110,13 +110,13 @@ def parseHeros(herosTxt):
                 "Jiang Jun" : "Jiang Jun" ,
                 "Jormungandr" : "Jormungandr" ,
                 "Kensei" : "Kensei" ,
-                "SamuraiH029Faceless" : "Kyoshin" ,
+                "Kyoshin" : "Kyoshin" ,
                 "Lawbringer" : "Lawbringer" ,
                 "Nobushi" : "Nobushi" ,
                 "Nuxia" : "Nuxia" ,
                 "Orochi" : "Orochi" ,
                 "Peacekeeper" : "Peacekeeper" ,
-                "OutlandersH030PirateQueen" : "Pirate" ,
+                "Pirate" : "Pirate" ,
                 "Raider" : "Raider" ,
                 "Shaman" : "Shaman" ,
                 "Shaolin" : "Shaolin" ,
@@ -128,7 +128,7 @@ def parseHeros(herosTxt):
                 "Warlord" : "Warlord" ,
                 "Warmonger" : "Warmonger" ,
                 "Zhanhu" : "Zhanhu",
-                "OutlandersH031Medjay" : "Medjay"
+                "Medjay" : "Medjay"
     }
     heros = {}
     currentHero = ""
@@ -226,17 +226,18 @@ def downloadThread(id):
     players = {}
     data = {}
     opts = uc.ChromeOptions()
+    
     # opts.headless = True
-    prefs = {"profile.managed_default_content_settings.images": 2}
+    # prefs = {"profile.managed_default_content_settings.images": 2}
     # opts.add_experimental_option("prefs", prefs)
     # opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
-
-    driver = uc.Chrome(options=opts, use_subprocess=True)
-    # driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
-    # time.sleep(20)
+    uc.TARGET_VERSION  = 104
+    driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
+    time.sleep(10)
     num = 0
     while len(users) > 0:
         mutex.acquire()
@@ -265,6 +266,8 @@ def downloadThread(id):
                 # if the player exists and is inactive update them once every 2 weeks
                 if(time.time() - ans[-1][2] > (86400 * 14)):
                     # timeForUpdate = True
+                    timeForUpdate = False
+                else:
                     timeForUpdate = True
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
@@ -287,8 +290,8 @@ def downloadThread(id):
             startTime = time.time()
             try:
                 # url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
-                # platform = "uplay"
-                # username = "Ching_Loong"
+                platform = "xbl"
+                username = "aqaurium"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
@@ -311,7 +314,7 @@ def downloadThread(id):
                 splitUsername = username.split("%20")
                 FormattedUsername = " ".join(splitUsername)
 
-                players[username] = {
+                players[FormattedUsername] = {
                 "psn" : [],
                 "xbl" : [],
                 "uplay" : []
@@ -323,20 +326,29 @@ def downloadThread(id):
                 print(4)
                 overviewData['modes'] = parseModes(modes)
                 print(4.5)
-                overviewData['heros'] = parseHeros(heros)
+                try:
+                    overviewData['heros'] = parseHeros(heros)
+                except:
+                    time.sleep(0.5)
+                    tabs[1].click()
+                    time.sleep(1)
+                    heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
+                    overviewData['heros'] = parseHeros(heros)
+                    
+
                 print(5)
-                players[username][platform].append(overviewData)
+                players[FormattedUsername][platform].append(overviewData)
                 posttime = time.time()
                 print(f"{posttime - pretime:.2f}")
                 num += 1
-                print(players[username])
-                print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {username}") # current user
-    
+                print(players[FormattedUsername])
+                print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {FormattedUsername}") # current user
+
                 if(num % 50 == 0):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
-                    time.sleep(60)
+                    # time.sleep(60)
                     players = {}
 
 
@@ -345,19 +357,32 @@ def downloadThread(id):
 
             except Exception as e:
                 try:
-                    if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
-                        mutex.acquire()
-                        failedUsersFile = open("failedUsers.csv","a")
-                        failedUsersFile.write(platform + "," + username + "\n")
-                        failedUsersFile.close()
-                        mutex.release()
-                        time.sleep(1)
+                    try:
+                        if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
+                            mutex.acquire()
+                            failedUsersFile = open("failedUsers.csv","a")
+                            failedUsersFile.write(platform + "," + FormattedUsername + "\n")
+                            failedUsersFile.close()
+                            mutex.release()
+                            time.sleep(1)
+                    except:
+                        if driver.find_element(by=By.TAG_NAME,value="p").text == "Player has not played pvp.":
+                            time.sleep(1)
                 except:   
                     print("GET error:\n", e)
-                    time.sleep(300)
+                    mutex.acquire()
+                    users.append((platform,username))
+                    mutex.release()
+                    time.sleep(5)
             
             endTime = time.time()
             print(f"T = {(endTime - startTime):.2f}")
+            if(endTime - startTime < 1):
+                mutex.acquire()
+                users.append((platform,username))
+                mutex.release()
+                time.sleep(5)
+                
 
         
 
@@ -374,7 +399,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(180)
+    time.sleep(30)
 
 for item in threads:
     item.join()

@@ -117,8 +117,12 @@ def downloadThread(id):
                 # url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 # https://api.tracker.gg/api/v1/for-honor/search/by-query/vincent_van_goy"
-                driver.get(url)
-                time.sleep(5)
+                try:
+                    driver.get(url)
+                except:
+                    time.sleep(10)
+                    driver.get(url)
+                time.sleep(1)
                 num += 1
                 pre = driver.find_element(by=By.TAG_NAME,value="pre").text
                 print(pre)
@@ -137,7 +141,7 @@ def downloadThread(id):
 
             except Exception as e:
                 print("GET error:\n", e)
-                # failedUsersFile = open("failedUsers.csv","a")
+                # failedUsersFile = open("failedUsers.csv","a")F
                 # failedUsersFile.write(platform + "," + username + "," + str(e))
                 # failedUsersFile.close()
                 skipUser = True
@@ -208,7 +212,7 @@ def downloadThread(id):
                 "Warden",
                 "Warlord",
                 "Warmonger",
-                "Zhanhu"
+                "Zhanhu",
                 ]
 
                 modes = ["Dominion","Duel","Breach","Elimination","Skirmish"]
@@ -930,13 +934,12 @@ def downloadThread(id):
                 players[username][platform].append(stats)
                 stats = {}
                 # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                if num % 10 == 0:
-                    time.sleep(100)
                 if(num % 50 == 0):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
                     players = {}
+                    time.sleep(20)
 
     dataFile = open(f".\\datafiles\\dataFinal-{id}.json","a")
     dataFile.write(json.dumps(players))

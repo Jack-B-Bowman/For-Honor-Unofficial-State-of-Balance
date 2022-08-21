@@ -178,7 +178,11 @@ for user in newData:
                     # end = time.time()
                     # hasPlayedTime += end - start
                     # start = time.time()
-                    insertGlobalStats(stat,lastPlayerID,user)
+                    try:
+                        insertGlobalStats(stat,lastPlayerID,user)
+                    except Exception as e:
+                        print(e)
+                        print(user,platform)
                     # end = time.time()
                     # globalTime += end-start
                     modes = stat["modes"]
