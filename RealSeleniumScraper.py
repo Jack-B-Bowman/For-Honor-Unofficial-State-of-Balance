@@ -42,6 +42,7 @@ failedUsersDict = {}
 for user in nonExistantUsersList:
     failedUsersDict[user] = True
 
+# turns tet of the format 123,321 into an integer
 def textToInt(text):
     splitText = text.split(',')
     splitText.reverse()
@@ -51,7 +52,7 @@ def textToInt(text):
     
     return num
 
-
+# takes the text values of the overview page and returns a dict of these values
 def parseOverview(username, platform, overviewTxt):
     overview = {}
     splitText = overviewTxt.split("\n")
@@ -95,6 +96,7 @@ def parseOverview(username, platform, overviewTxt):
 
     return overview
 
+# takes the text values of the heros page and returns a dict of these values
 def parseHeros(herosTxt):
     splitText = herosTxt.split('\n')
     heroNames = {
@@ -171,6 +173,7 @@ def parseHeros(herosTxt):
 
     return heros
 
+# takes the text values of the modes page and returns a dict of these values
 def parseModes(modesTxt):
     splitText = modesTxt.split("\n")
     modeNames = {
@@ -287,29 +290,75 @@ def downloadThread(id):
         url = ""
         html_data = ""
         if lineString not in failedUsersDict and timeForUpdate:
-            startTime = time.time()
+            playerStartTime = time.time()
             try:
                 # url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
-                platform = "xbl"
-                username = "aqaurium"
+                # platform = "xbl"
+                # username = "aqaurium"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 print(url)
                 driver.get(url)
                 time.sleep(0.5)
-                overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
-                print(1)
-                tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
-                tabs[1].click()
-                time.sleep(0.5)
-                heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
-                print(2)
+                print("Overview")
+                overview = ""
+                success = False
+                startTime = time.time()
+                # retry loop to avoid using sleeps
+                while not success and time.time() - startTime < 3:
+                    try:
+                        overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
+                        success = True
+                    except:
+                        ...
+                if not success:
+                    raise Exception("Could not find overview elements in alloted time")
 
-                # print(heros)
+                print("Tabs")
+                tabs = ""
+                success = False
+                startTime = time.time()
+                # retry loop to avoid using sleeps
+                while not success and time.time() - startTime < 3:
+                    try:
+                        tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
+                        success = True
+                    except:
+                        ...
+                if not success:
+                    raise Exception("Could not find tab elements in alloted time")
+
+                tabs[1].click()
+                print("Heros")
+                heros = ""
+                success = False
+                startTime = time.time()
+                # retry loop to avoid using sleeps
+                while not success and time.time() - startTime < 3:
+                    try:
+                        heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
+                        success = True
+                    except:
+                        ...
+                if not success:
+                    raise Exception("Could not find hero data in alloted time")
+                
+
                 tabs[2].click()
-                time.sleep(1)
-                modes = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small").text
-                print(3)
-                # print(modes)
+                print("Modes")
+                modes = ""
+                success = False
+                startTime = time.time()
+                # retry loop to avoid using sleeps
+                while not success and time.time() - startTime < 3:
+                    try:
+                        modes = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small").text
+                        success = True
+                    except:
+                        ...
+                if not success:
+                    raise Exception("Could not find mode data in alloted time")
+                
+                print("Begin Proccessing...")
 
                 splitUsername = username.split("%20")
                 FormattedUsername = " ".join(splitUsername)
@@ -321,25 +370,18 @@ def downloadThread(id):
                 }
 
                 pretime = time.time()
-                print(3.5)
+                print("Parse Overview")
                 overviewData = parseOverview(username=FormattedUsername,platform=platform,overviewTxt=overview)
-                print(4)
+                print("Parse Modes")
                 overviewData['modes'] = parseModes(modes)
-                print(4.5)
-                try:
-                    overviewData['heros'] = parseHeros(heros)
-                except:
-                    time.sleep(0.5)
-                    tabs[1].click()
-                    time.sleep(1)
-                    heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
-                    overviewData['heros'] = parseHeros(heros)
+                print("Parse Heros")
+                overviewData['heros'] = parseHeros(heros)
                     
 
-                print(5)
+                print("Add Player To Dict")
                 players[FormattedUsername][platform].append(overviewData)
                 posttime = time.time()
-                print(f"{posttime - pretime:.2f}")
+                print(f"DeltaT = {posttime - pretime:.2f}")
                 num += 1
                 print(players[FormattedUsername])
                 print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {FormattedUsername}") # current user
@@ -358,6 +400,7 @@ def downloadThread(id):
             except Exception as e:
                 try:
                     try:
+                        # handles non existant users
                         if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
                             mutex.acquire()
                             failedUsersFile = open("failedUsers.csv","a")
@@ -366,9 +409,11 @@ def downloadThread(id):
                             mutex.release()
                             time.sleep(1)
                     except:
+                        # handles players who have not played PVP
                         if driver.find_element(by=By.TAG_NAME,value="p").text == "Player has not played pvp.":
                             time.sleep(1)
-                except:   
+                except:
+                    # handles errors raised due to browser check   
                     print("GET error:\n", e)
                     mutex.acquire()
                     users.append((platform,username))
@@ -376,8 +421,8 @@ def downloadThread(id):
                     time.sleep(5)
             
             endTime = time.time()
-            print(f"T = {(endTime - startTime):.2f}")
-            if(endTime - startTime < 1):
+            print(f"T = {(endTime - playerStartTime):.2f}")
+            if(endTime - playerStartTime < 1):
                 mutex.acquire()
                 users.append((platform,username))
                 mutex.release()
