@@ -7,8 +7,8 @@ conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
 # seasonStartDate = 1655395200 # true season start
-# seasonStartDate = 1656547619 # post conq nerf 
-seasonStartDate = 1658970014
+seasonStartDate = 1656547619 # post conq nerf 
+# seasonStartDate = 1658970014
 
 brokenPlayers = []
 
@@ -244,7 +244,7 @@ for user in activeUsers:
                         theMap2[hero]["wins"] += winsDif
                         theMap2[hero]["losses"] += lossesDif
                         
-                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 10 and last["heros"][hero]["time"] > 20000):  
+                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 30 and last["heros"][hero]["time"] > 20000):  
                             totalUsers += 1
                             theMap[hero].append(winsDif/(winsDif + lossesDif))
                     else:

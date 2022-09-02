@@ -11,7 +11,7 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 1
+    arg = 4
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -256,7 +256,7 @@ def downloadThread(id):
         fortmattedUN = " ".join(splitUsername)
         
 
-        sql = f"""SELECT username,platform,UTCSeconds from stat where username='{fortmattedUN}' and platform='{platform}'"""
+        sql = f"""SELECT username,platform,UTCSeconds from stat where username='{fortmattedUN}' and platform='{platform}' and UTCSeconds < 1661262680"""
         crsr.execute(sql)
         ans = crsr.fetchall()
         ans.sort(key=lambda y:y[2])
@@ -271,16 +271,16 @@ def downloadThread(id):
                     # timeForUpdate = True
                     timeForUpdate = False
                 else:
-                    timeForUpdate = True
+                    timeForUpdate = False
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
                 if timeBetweenUpdates > 86400 * 30:
-                    if(time.time() - ans[-1][2] > (86400 * 7)):
+                    if(time.time() - ans[-1][2] > (86400 * 2)):
                         timeForUpdate = True
                 # if the player has played in the last 30 days update them once a day
                 else:
-                    if(time.time() - ans[-1][2] > (86400 * 7)):
+                    if(time.time() - ans[-1][2] > (86400 * 2)):
                         timeForUpdate = True
         if len(ans) == 0:
             timeForUpdate = True
@@ -304,7 +304,7 @@ def downloadThread(id):
                 success = False
                 startTime = time.time()
                 # retry loop to avoid using sleeps
-                while not success and time.time() - startTime < 3:
+                while not success and time.time() - startTime < 10:
                     try:
                         overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                         success = True

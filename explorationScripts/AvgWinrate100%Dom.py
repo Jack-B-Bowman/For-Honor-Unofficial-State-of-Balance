@@ -39,7 +39,8 @@ theMap = {
 "Warden" : [0,0],
 "Warlord" : [0,0],
 "Warmonger" : [0,0],
-"Zhanhu" : [0,0]
+"Zhanhu" : [0,0],
+"Medjay" : [0,0]
 }
 
 theMap2 = {
@@ -72,7 +73,9 @@ theMap2 = {
 "Warden" : [],
 "Warlord" : [],
 "Warmonger" : [],
-"Zhanhu" : []
+"Zhanhu" : [],
+"Medjay" : []
+
 }
 
 playerMap = {
@@ -81,10 +84,12 @@ playerMap = {
 
 playerIDs = []
 seasonStartDate = 1655395200
+seasonStartDate = 1656547619 # post conq nerf 
+
 sql = f"""
 
 SELECT stat.playerID, stat.username, stat.platform, stat.wins as totalWins, stat.losses as totalLosses, mode.wins as domWins, mode.losses as domLosses
- from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Duel' and username in (
+ from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Dominion' and username in (
  
 SELECT username from 
 (SELECT username, count(username) as num from (select * from stat where UTCSeconds > {seasonStartDate}) 
@@ -111,13 +116,16 @@ for entry in range(1,len(ans)):
     lastUN = lastPlayerStat[1]
     currentPlat = playerStat[2]
     lastPlat = lastPlayerStat[2]
-
-    if currentUN == lastUN and currentPlat == lastPlat:
-        totalMatchDif = (playerStat[3] + playerStat[4]) - (lastPlayerStat[3] + lastPlayerStat[4])
-        domMatchDif = (playerStat[5] + playerStat[6]) - (lastPlayerStat[5] + lastPlayerStat[6])
-        if domMatchDif / totalMatchDif >= 1:
-            playerIDs.append((lastPlayerStat[0],playerStat[0]))
-    else:
+    try: 
+        if currentUN == lastUN and currentPlat == lastPlat:
+            totalMatchDif = (playerStat[3] + playerStat[4]) - (lastPlayerStat[3] + lastPlayerStat[4])
+            domMatchDif = (playerStat[5] + playerStat[6]) - (lastPlayerStat[5] + lastPlayerStat[6])
+            if domMatchDif / totalMatchDif >= 1:
+                playerIDs.append((lastPlayerStat[0],playerStat[0]))
+        else:
+            ...
+    except Exception as e:
+        # print(e)
         ...
 
 

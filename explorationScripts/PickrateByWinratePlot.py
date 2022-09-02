@@ -40,12 +40,12 @@ sql = """
     username,platform,UTCSeconds,
     min(UTCSeconds) over (PARTITION by username) as min_date from hero
     INNER JOIN stat
-    WHERE hero.playerID=stat.playerID) minValues
+    WHERE hero.playerID=stat.playerID and stat.UTCSeconds > 1656547619) minValues
     WHERE UTCSeconds=min_date) minValues
 
     WHERE maxValues.name=minValues.name and maxValues.username=minValues.username and maxValues.platform=minValues.platform)
 
-    WHERE totalMatchCount > 20 and winrate < 100 and winrate > 0 and heroMatchCount > 0
+    WHERE totalMatchCount > 10 and winrate < 1 and winrate > 0 and heroMatchCount > 0
     """
 
 crsr.execute(sql)
@@ -103,7 +103,8 @@ formatStuff = {
         "Zhanhu"    : colours[4],
     },
     "Outlanders" : {
-        "Pirate" : colours[9]
+        "Pirate" : colours[9],
+        "Medjay" : colours[8],
     }
 }
 
@@ -137,7 +138,8 @@ theMap = {
 "Warden" : [],
 "Warlord" : [],
 "Warmonger" : [],
-"Zhanhu" : []
+"Zhanhu" : [],
+"Medjay" : [],
 }
 
 bucketSize = 3

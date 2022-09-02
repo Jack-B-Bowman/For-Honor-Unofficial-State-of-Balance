@@ -37,7 +37,8 @@ theMap = {
 "Warden" : [0,0],
 "Warlord" : [0,0],
 "Warmonger" : [0,0],
-"Zhanhu" : [0,0]
+"Zhanhu" : [0,0],
+"Medjay" : [0,0]
 }
 
 totalMatches = 0
@@ -71,15 +72,16 @@ theMap2 = {
 "Warden" : 0,
 "Warlord" : 0,
 "Warmonger" : 0,
-"Zhanhu" : 0
+"Zhanhu" : 0,
+"Medjay" : 0
 }
 
 playerIDs = []
-
+# 1656547619
 sql = """
 
 SELECT stat.playerID, stat.username, stat.platform, stat.wins as totalWins, stat.losses as totalLosses, mode.wins as domWins, mode.losses as domLosses
- from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Dominion' and username in (
+ from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Dominion' and stat.UTCSeconds > 0 and username in (
  
 SELECT username from 
 (SELECT username, count(username) as num from stat 
@@ -138,9 +140,14 @@ for pair in playerIDs:
             lateStats[item[2]] = item[3:]
 
     for hero in earlyStats:
-        res = tuple(map(lambda i, j: i - j, lateStats[hero], earlyStats[hero]))
-        theMap[hero][0] += res[3]
-        theMap[hero][1] += res[4]
+        try:
+            res = tuple(map(lambda i, j: i - j, lateStats[hero], earlyStats[hero]))
+            theMap[hero][0] += res[3]
+            theMap[hero][1] += res[4]
+            theMap2[hero] += res[3] + res[4]
+        except Exception as e:
+            # print(e)
+            ...
 
 winrateList = []
 for hero in theMap:
@@ -151,7 +158,7 @@ for hero in theMap:
 winrateList.sort(key=lambda y:y[1])
 winrateList.reverse()
 for hero in winrateList:
-    print(f"{hero[0]}   :\t {hero[1]:.2f}%" )
+    print(f"{hero[0]}   :\t {hero[1]:.2f}%, n={theMap2[hero[0]]}" )
     # print(f"{hero[0]}" )
 
 # for hero in winrateList:
