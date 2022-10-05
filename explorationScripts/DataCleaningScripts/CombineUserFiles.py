@@ -2,13 +2,8 @@
 
 
 filesToMerge = [
-    "UserFiles\\users.csv",
-    "UserFiles\\users2.csv",
-    "UserFiles\\users3.csv",
-    "UserFiles\\users4.csv",
-    "UserFiles\\users5.csv",
-    "UserFiles\\users6.csv",
-    "compiledUsers-06-27-1.csv"
+    "compiledUsers-06-27-1.csv",
+    "usersTesting09-02-1.txt"
 ]
 
 users = {}
@@ -23,6 +18,6 @@ for file in filesToMerge:
         else:
             users[line] = 0
 
-combinedFile = open("compiledUsers-08-06-1.csv","a")
+combinedFile = open("compiledUsers-09-04-1.csv","a")
 combinedFile.writelines(users)
 combinedFile.close()

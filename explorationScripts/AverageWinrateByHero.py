@@ -9,7 +9,8 @@ crsr = conn.cursor()
 # seasonStartDate = 1655395200 # true season start
 seasonStartDate = 1656547619 # post conq nerf 
 # seasonStartDate = 1658970014
-
+seasonStartDate = 1658966400 # Medjay
+seasonStartDate = 1663248434 # dodge
 brokenPlayers = []
 
 sql = f"""
@@ -43,7 +44,7 @@ lastTime = ans[0][2]
 for i in range(len(ans)):
     counter += 1
     if counter % 10000 == 0:
-        print(f"entries parsed: {counter} / {len(ans)}")
+        print(f"\rentries parsed: {counter} / {len(ans)}",end="")
     hero = ans[i][0]
     user = ans[i][1]
     time = ans[i][2]
@@ -120,7 +121,7 @@ for i in range(len(ans)):
         }
         activeUsers[user][platform] = [stat]
 
-
+print()
 
 theMap = {
 "Aramusha" : [],
@@ -244,7 +245,7 @@ for user in activeUsers:
                         theMap2[hero]["wins"] += winsDif
                         theMap2[hero]["losses"] += lossesDif
                         
-                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 30 and last["heros"][hero]["time"] > 20000):  
+                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 20 and last["heros"][hero]["time"] > 20000):  
                             totalUsers += 1
                             theMap[hero].append(winsDif/(winsDif + lossesDif))
                     else:
@@ -255,7 +256,7 @@ print("winrate")
 winrateList = []
 for hero in theMap:
     winRate = (np.mean(theMap[hero])) * 100
-    # winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
+    winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
     winrateList.append((hero,winRate, (theMap2[hero]["wins"] + theMap2[hero]["losses"])))
     # winrateList.append((hero,winRate,len(theMap[hero])))
     # print(f"{hero} : {winRate:.2f}%")

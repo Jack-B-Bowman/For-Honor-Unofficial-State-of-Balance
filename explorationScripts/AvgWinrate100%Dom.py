@@ -85,11 +85,13 @@ playerMap = {
 playerIDs = []
 seasonStartDate = 1655395200
 seasonStartDate = 1656547619 # post conq nerf 
+seasonStartDate = 1658966400 # Medjay
+
 
 sql = f"""
 
 SELECT stat.playerID, stat.username, stat.platform, stat.wins as totalWins, stat.losses as totalLosses, mode.wins as domWins, mode.losses as domLosses
- from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Dominion' and username in (
+ from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Duel' and username in (
  
 SELECT username from 
 (SELECT username, count(username) as num from (select * from stat where UTCSeconds > {seasonStartDate}) 
@@ -108,7 +110,7 @@ print("Checking results for pairs with 100% dominion matches")
 for entry in range(1,len(ans)):
 
     if entry % 100000 == 0:
-        print(f"{(entry/len(ans)) * 100:.2f}% Complete")
+        print(f"\r{(entry/len(ans)) * 100:.2f}% Complete",end="")
 
     playerStat = ans[entry]
     lastPlayerStat = ans[entry - 1]
@@ -128,14 +130,14 @@ for entry in range(1,len(ans)):
         # print(e)
         ...
 
-
+print()
 
 print("Getting wins and losses for each hero")
 i = 0
 for pair in playerIDs:
     i += 1
     if i % 10000 == 0:
-        print(f"{(i/len(playerIDs)) * 100:.2f}%")
+        print(f"\r{(i/len(playerIDs)) * 100:.2f}%",end="")
     earlyID = pair[0]
     lateID = pair[1]
     selectSQL = f"""SELECT * from hero where playerID = {earlyID} or playerID = {lateID}"""
@@ -173,7 +175,7 @@ for pair in playerIDs:
         except Exception as e:
             print(e)
 
-
+print()
 
 for player in playerMap:
     heros = playerMap[player]

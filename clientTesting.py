@@ -22,7 +22,7 @@ headers = {
     'TE': "trailers"
     }
 
-conn.request("GET", "/api/v2/for-honor/standard/profile/uplay/matty_webz", payload, headers)
+conn.request("GET", "asstr", payload, headers)
 
 res = conn.getresponse()
 data = res.read()

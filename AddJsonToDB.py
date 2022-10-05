@@ -48,7 +48,7 @@ def mergeJSON(dir,originalFilePath=""):
                 count += 1
 
                 if(count % 1000 == 0):
-                    print(count)
+                    print(f"\r{count}",end="")
 
                 if user in mergedData:
                     numberOfDupes += 1
@@ -144,7 +144,8 @@ def hasPlayed(user,stat):
     where playerID = {playerID}
     """)
     return False
-print("merging JSON...")
+print()
+print("\nmerging JSON...")
 newData = mergeJSON("datafiles")
 
 globalTime = 0
@@ -154,14 +155,14 @@ hasPlayedTime = 0
 
 count = 0
 playersUpdated = 0
-print("inserting...")
+print("\ninserting...")
 crsr.execute('BEGIN TRANSACTION')
 for user in newData:
     # if user == "b1.exe":
     #     print("me")
     count += 1
     if count % 10000 == 0:
-        print(f"{count} --> {playersUpdated}")
+        print(f"\r{count} --> {playersUpdated}",end="")
         # print(f"insertGlobalTime = {(globalTime):.2f}")
         # print(f"insertModeTime = {(modeTime):.2f}")
         # print(f"insertHerolTime = {(heroTime):.2f}")
@@ -206,7 +207,7 @@ for user in newData:
                     lastPlayerID += 1
 
         
-
+print()
 
 
 conn.commit()

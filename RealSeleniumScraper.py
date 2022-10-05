@@ -15,7 +15,7 @@ if len(sys.argv) < 2:
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("compiledUsers-06-27-1.csv","r")
+userFile = open("compiledUsers-09-04-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
@@ -271,12 +271,12 @@ def downloadThread(id):
                     # timeForUpdate = True
                     timeForUpdate = False
                 else:
-                    timeForUpdate = False
+                    timeForUpdate = True
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
                 if timeBetweenUpdates > 86400 * 30:
-                    if(time.time() - ans[-1][2] > (86400 * 2)):
+                    if(time.time() - ans[-1][2] > (86400 * 7)):
                         timeForUpdate = True
                 # if the player has played in the last 30 days update them once a day
                 else:
@@ -289,6 +289,8 @@ def downloadThread(id):
 
         url = ""
         html_data = ""
+        if lineString in failedUsersDict:
+            print("me")
         if lineString not in failedUsersDict and timeForUpdate:
             playerStartTime = time.time()
             try:
@@ -309,7 +311,14 @@ def downloadThread(id):
                         overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                         success = True
                     except:
-                        ...
+                        try:
+                            # handles non existant users
+                            if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
+                                raise Exception("404 Error")
+                        except Exception as e:
+                            if e == "404 Error":
+                                raise Exception("404 Error")
+
                 if not success:
                     raise Exception("Could not find overview elements in alloted time")
 

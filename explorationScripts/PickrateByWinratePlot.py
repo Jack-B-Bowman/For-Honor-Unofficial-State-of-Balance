@@ -176,7 +176,7 @@ for faction in formatStuff:
         y = []
         for i in range(len(theMap[hero])):
             if skillBucketsMatchCount[i] > 0:
-                if (i * bucketSize) > 20 and (i * bucketSize) < 90:
+                if (i * bucketSize) > 33 and (i * bucketSize) < 82:
                     x.append(i * bucketSize)
                     count = skillBucketsMatchCount[i]
                     heroMatches = theMap[hero][i]

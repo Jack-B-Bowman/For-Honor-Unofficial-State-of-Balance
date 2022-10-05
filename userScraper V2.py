@@ -35,10 +35,10 @@ def downloadThread(id):
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
 
-    driver = uc.Chrome(options=opts, use_subprocess=True)
+    driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
 
     timeToStop = False
-    skip = 95000
+    skip = 0
     while not timeToStop:
         url = f"https://api.tracker.gg/api/v1/for-honor/standard/leaderboards?type=stats&platform=all&board=KdRatioP&gameType=pvp&skip={skip}&take=100"
         driver.get(url)
@@ -58,7 +58,7 @@ def downloadThread(id):
             timeToStop = True
         skip += 100
         print(f"users scraped = {skip}")
-        file = open("usersTesting08-06-1.txt","a")
+        file = open("usersTesting09-02-1.txt","a")
         for user in playerList:
             file.write(user[0] + "," + user[1] + "\n")
         file.close()

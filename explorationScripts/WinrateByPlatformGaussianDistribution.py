@@ -10,11 +10,12 @@ conn = sqlite3.connect("FH.db")
 
 # seasonStartDate = 1655395200
 seasonStartDate = 1658970014
+seasonStartDate = 1658966400 # Medjay
 
 # seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
-mode = "Duel"
+mode = "Dominion"
 sqlMode = f"""select 
 	   name,
 	   username,
@@ -73,7 +74,7 @@ counter = 0
 for i in range(len(ans)):
     counter += 1
     if counter % 1000 == 0:
-        print(f"entries parsed: {counter}")
+        print(f"\rentries parsed: {counter}",end="")
     mode = ans[i][0]
     user = ans[i][1]
     platform = ans[i][2]
@@ -114,6 +115,7 @@ for i in range(len(ans)):
         activeUsers[user] = {}
         activeUsers[user][platform] = [stat]
 
+print()
 
 PSNstats = []
 XboxStats = []
@@ -176,11 +178,11 @@ for user in activeUsers:
 print(f"average matches played = {np.median(numberOfMatches)}")
 
 psnRates =   [i[1] for i in PSNstats]
-print(f"psn std deviation: {np.std(psnRates):.2f} \t mean: {np.mean(psnRates):.2f}")
+print(f"psn std deviation: {np.std(psnRates):.2f} \t mean: {np.mean(psnRates):.2f} \t med: {np.median(psnRates):.2f}")
 xblRates =   [i[1] for i in XboxStats]
-print(f"xbl std deviation: {np.std(xblRates):.2f} \t mean: {np.mean(xblRates):.2f}")
+print(f"xbl std deviation: {np.std(xblRates):.2f} \t mean: {np.mean(xblRates):.2f} \t med: {np.median(xblRates):.2f}")
 uplayRates = [i[1] for i in PCstats]
-print(f"PC  std deviation: {np.std(uplayRates):.2f} \t mean: {np.mean(uplayRates):.2f}")
+print(f"PC  std deviation: {np.std(uplayRates):.2f} \t mean: {np.mean(uplayRates):.2f} \t med: {np.median(uplayRates):.2f}")
 
 print(f"PSN:   {len(psnRates)}")
 print(f"XBL:   {len(xblRates)}")
@@ -200,7 +202,7 @@ for platform in allStats:
     ax = sns.distplot(platform,color=colours[i],hist=False,label=names[i])
     # plt.hist(platform,50,color=colours[i])
     i+=1
-plt.title(f"Distribution of Player Winrates by Platform for {mode}")
+plt.title(f"Distribution of Player Winrates by Platform for {mode} Y6S3")
 plt.xlabel("Winrate (%)")
 plt.legend()
 plt.show()
