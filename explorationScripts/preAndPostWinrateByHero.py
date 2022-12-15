@@ -128,6 +128,7 @@ for i in range(len(ans)):
                     "time" : timePlayed
             }
             activeUsers[user][platform] = [stat]
+    # add new user to active users
     else:
         activeUsers[user] = {}
         stat = {
