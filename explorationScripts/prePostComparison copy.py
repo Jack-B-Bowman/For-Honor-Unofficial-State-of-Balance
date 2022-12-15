@@ -32,14 +32,14 @@ plt.rcdefaults()
 fig, ax = plt.subplots()
 
 # graph postSeason
-names = [i[0] for i in postSeasonList]
-winrates = [i[1] for i in postSeasonList]
-pickrates = [i[2] for i in postSeasonList]
+names = [i[0] for i in preSeasonList]
+winrates = [i[1] for i in preSeasonList]
+pickrates = [i[2] for i in preSeasonList]
 
 
 y_pos = np.arange(len(names))
 
-ax.barh(y_pos, winrates, align='center', label="Current Season")
+ax.barh(y_pos, winrates, align='center', label="Last Season")
 
 for i, v in enumerate(winrates):
     b = float(v)
@@ -55,18 +55,18 @@ for i, v in enumerate(winrates):
 
 # graph preSeason
 
-names = [i[0] for i in preSeasonList]
-winrates = [i[1] for i in preSeasonList]
-pickrates = [i[2] for i in preSeasonList]
+names = [i[0] for i in postSeasonList]
+winrates = [i[1] for i in postSeasonList]
+pickrates = [i[2] for i in postSeasonList]
 
 
 y_pos = np.arange(len(names))
 
-ax.barh(y_pos, winrates, align='center',height=0.5, label="Last Season")
+ax.barh(y_pos, winrates, align='center',height=0.5, label="Current Season")
 
 for i, v in enumerate(winrates):
     b = float(v)
-    if abs(b - postSeasonList[i][1]) > 1.0:
+    if abs(b - preSeasonList[i][1]) > 1.0:
         ax.text(v + 0.15, i + 0.14, f"{b:.2f}%",
                 color = 'black', fontweight = 'bold')
 

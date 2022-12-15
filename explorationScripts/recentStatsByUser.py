@@ -7,8 +7,8 @@ seasonStartDate = 1656547619
 # seasonStartDate = 1663248434 # dodge
 seasonStartDate = 0
 # user = "Lucky_Arian"
-user = "CharAznable7684"
-platform="xbl"
+user = "vincent_van_goy"
+platform="uplay"
 crsr.execute(f"SELECT * from stat where username = '{user}' and platform='{platform}' and stat.UTCSeconds > {seasonStartDate}")
 ans = crsr.fetchall()
 ans.sort(key=lambda y:y[4])

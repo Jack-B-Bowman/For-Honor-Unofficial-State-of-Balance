@@ -11,6 +11,9 @@ seasonStartDate = 1656547619 # post conq nerf
 # seasonStartDate = 1658970014
 seasonStartDate = 1658966400 # Medjay
 seasonStartDate = 1663248434 # dodge
+seasonStartDate = 1666137644 # crossplay phase 2
+seasonStartDate = 1666656044 # kensei hitstun+matchmaking
+
 brokenPlayers = []
 
 sql = f"""
@@ -256,7 +259,7 @@ print("winrate")
 winrateList = []
 for hero in theMap:
     winRate = (np.mean(theMap[hero])) * 100
-    winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
+    # winRate = (theMap2[hero]["wins"] / (theMap2[hero]["wins"] + theMap2[hero]["losses"])) * 100
     winrateList.append((hero,winRate, (theMap2[hero]["wins"] + theMap2[hero]["losses"])))
     # winrateList.append((hero,winRate,len(theMap[hero])))
     # print(f"{hero} : {winRate:.2f}%")

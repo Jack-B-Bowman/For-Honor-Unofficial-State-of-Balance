@@ -86,16 +86,18 @@ playerIDs = []
 seasonStartDate = 1655395200
 seasonStartDate = 1656547619 # post conq nerf 
 seasonStartDate = 1658966400 # Medjay
+seasonStartDate = 1663248434 # dodge
+
 
 
 sql = f"""
 
 SELECT stat.playerID, stat.username, stat.platform, stat.wins as totalWins, stat.losses as totalLosses, mode.wins as domWins, mode.losses as domLosses
- from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Duel' and username in (
+ from stat INNER join mode WHERE mode.playerID = stat.playerID and mode.name='Dominion' and username in (
  
 SELECT username from 
 (SELECT username, count(username) as num from (select * from stat where UTCSeconds > {seasonStartDate}) 
-GROUP by username)
+GROUP by username,platform)
 where num > 1 
 
  )

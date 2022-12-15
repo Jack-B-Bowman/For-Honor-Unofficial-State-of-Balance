@@ -47,7 +47,7 @@ for i in range(1,2465):
         users = getPage(i)
 
     j=0
-    file = open("usersTesting06-27-1.txt","a")
+    file = open("usersTesting10-18-1.txt","a")
     for user in users:
         j+=1
         # funny html spaghetti parsing

@@ -5,7 +5,12 @@ import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
-seasonStartDate = 1655395200
+# seasonStartDate = 1655395200
+seasonStartDate = 1658966400 # Medjay
+postSeasonStartDate = 1663248434 # dodge
+seasonStartDate = 1663248434 # dodge
+postSeasonStartDate = 1666137644 # crossplay phase 2
+# postSeasonStartDate = 1666656044 # kensei hitstun+matchmaking
 
 sqlPostSeason = f"""
 select name,
@@ -25,7 +30,7 @@ from (
          wins,
          losses,
 		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds > {seasonStartDate} )
+  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds > {postSeasonStartDate} )
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date;
 """
@@ -47,11 +52,11 @@ from (
          wins,
          losses,
 		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds < {seasonStartDate} )
+  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {postSeasonStartDate} )
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date;
 """
-crsr.execute(sqlPreSeason)
+crsr.execute(sqlPostSeason)
 ans = crsr.fetchall()
 
 activeUsers = {}
@@ -154,6 +159,7 @@ theMap = {
 "Kensei" : [],
 "Kyoshin" : [],
 "Lawbringer" : [],
+"Medjay" : [],
 "Nobushi" : [],
 "Nuxia" : [],
 "Orochi" : [],
@@ -187,6 +193,7 @@ theMap2 = {
 "Kensei" : {"wins": 0, "losses": 0},
 "Kyoshin" : {"wins": 0, "losses": 0},
 "Lawbringer" : {"wins": 0, "losses": 0},
+"Medjay" : {"wins": 0, "losses": 0},
 "Nobushi" : {"wins": 0, "losses": 0},
 "Nuxia" : {"wins": 0, "losses": 0},
 "Orochi" : {"wins": 0, "losses": 0},
@@ -249,18 +256,22 @@ for user in activeUsers:
             # if modeDiff > totalDiff * 0.5:
             if True:
                 for hero in first["heros"]:
-                    x = last["heros"][hero]["wins"] 
-                    y = first["heros"][hero]["wins"]
-                    winsDif   = last["heros"][hero]["wins"]   - first["heros"][hero]["wins"]
-                    lossesDif = last["heros"][hero]["losses"] - first["heros"][hero]["losses"]
-                    totalMatches += winsDif + lossesDif                      
+                    try:
+                        x = last["heros"][hero]["wins"] 
+                        y = first["heros"][hero]["wins"]
+                        winsDif   = last["heros"][hero]["wins"]   - first["heros"][hero]["wins"]
+                        lossesDif = last["heros"][hero]["losses"] - first["heros"][hero]["losses"]
+                        totalMatches += winsDif + lossesDif                      
 
-                    theMap2[hero]["wins"] += winsDif
-                    theMap2[hero]["losses"] += lossesDif
-                    
-                    if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 10 and last["heros"][hero]["time"] > 20000):  
-                        totalUsers += 1
-                        theMap[hero].append(winsDif/(winsDif + lossesDif))
+                        theMap2[hero]["wins"] += winsDif
+                        theMap2[hero]["losses"] += lossesDif
+                        
+                        if(winsDif != 0 and lossesDif != 0 and winsDif + lossesDif > 20 and last["heros"][hero]["time"] > 20000):  
+                            totalUsers += 1
+                            theMap[hero].append(winsDif/(winsDif + lossesDif))
+
+                    except Exception as e:
+                        print(e)
 print("n = " + str(totalMatches))
 print("number of players = " + str(totalUsers))
 print("winrate")
@@ -297,10 +308,10 @@ for hero in names:
 
 y_pos = np.arange(len(names))
 
-winrateMean = np.mean(winrates)
-winrateMean = np.median(winrates)
-meanDiff = winrateMean - 50
-winrates = list(map(lambda x: x - meanDiff, winrates))
+# winrateMean = np.mean(winrates)
+# # winrateMean = np.median(winrates)
+# meanDiff = winrateMean - 50
+# winrates = list(map(lambda x: x - meanDiff, winrates))
 
 ax.barh(y_pos, winrates, align='center')
 
@@ -326,14 +337,14 @@ ax.set_title('What is The Winrate and Pickrate by Hero')
 
 ticks = list(range(0,10)) + list(range(30,70))
 
-print(f"average winrate is off by {meanDiff}%")
+# print(f"average winrate is off by {meanDiff}%")
 data = {}
 for i in range(len(winrates)):
     name = names[i]
     data[name] = [winrates[i],pickrates[i]]
 
-file = open("preComputedDatafiles\\preSeasonData.json","w")
-file.write(json.dumps(data))
+file = open("preComputedDatafiles\\postSeasonData.json","w")
+file.write(json.dumps(data,indent=4))
 file.close()
 plt.xticks(ticks,[str(i) for i in ticks])
 plt.show()

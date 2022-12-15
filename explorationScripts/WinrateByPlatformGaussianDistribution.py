@@ -11,11 +11,14 @@ conn = sqlite3.connect("FH.db")
 # seasonStartDate = 1655395200
 seasonStartDate = 1658970014
 seasonStartDate = 1658966400 # Medjay
-
+seasonStartDate = 1666137644 # crossplay phase 2
+seasonEndDate = 1666656044 # kensei hitstun+matchmaking
+seasonEndDate = 91666656044 # kensei hitstun+matchmaking
+seasonStartDate = 1666656044 # kensei hitstun+matchmaking
 # seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
-mode = "Dominion"
+mode = "Duel"
 sqlMode = f"""select 
 	   name,
 	   username,
@@ -35,12 +38,13 @@ from (
 		 wins,
 		 losses,
          reputation
-  from (SELECT mode.name,mode.wins,mode.losses, stat.username, stat.platform, stat.UTCSeconds, stat.reputation FROM mode INNER JOIN stat on mode.playerID = stat.playerID  WHERE mode.name = '{mode}' and stat.UTCSeconds > {seasonStartDate})
+  from (SELECT mode.name,mode.wins,mode.losses, stat.username, stat.platform, stat.UTCSeconds, stat.reputation FROM mode INNER JOIN stat on mode.playerID = stat.playerID  WHERE mode.name = '{mode}' and stat.UTCSeconds > {seasonStartDate} and stat.UTCSeconds < {seasonEndDate})
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date
 ORDER BY username"""
 
 sqlTotal = f"""select 
+	   'total' mode,
 	   username,
 	   platform,
        UTCSeconds,
@@ -49,7 +53,6 @@ sqlTotal = f"""select
 	   reputation
 from (
   select 
-		 
 		 username, 
 		 platform,
          UTCSeconds,
@@ -58,12 +61,12 @@ from (
 		 wins,
 		 losses,
 		 reputation
-  from (SELECT * from stat WHERE UTCSeconds > {seasonStartDate})
+  from (SELECT * from stat WHERE UTCSeconds > {seasonStartDate} and stat.UTCSeconds < {seasonEndDate})
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date
 ORDER BY username"""
 
-crsr.execute(sqlMode)
+crsr.execute(sqlTotal)
 
 ans = crsr.fetchall()
 
@@ -72,48 +75,51 @@ playersOver80 = {}
 activeUsers = {}
 counter = 0
 for i in range(len(ans)):
-    counter += 1
-    if counter % 1000 == 0:
-        print(f"\rentries parsed: {counter}",end="")
-    mode = ans[i][0]
-    user = ans[i][1]
-    platform = ans[i][2]
-    time = ans[i][3]
-    wins = ans[i][4]
-    losses = ans[i][5]
-    reputation = ans[i][6]
-    if user in activeUsers:
-        if platform in activeUsers[user]:
-            stat = {
-                "time" : time,
-                "wins" : wins,
-                "losses" : losses,
-                "mode" : mode,
-                "platform" : platform,
-                "reputation": reputation
-            }          
-            activeUsers[user][platform].append(stat)
+    try:
+        counter += 1
+        if counter % 1000 == 0:
+            print(f"\rentries parsed: {counter}",end="")
+        mode = ans[i][0]
+        user = ans[i][1]
+        platform = ans[i][2]
+        time = ans[i][3]
+        wins = ans[i][4]
+        losses = ans[i][5]
+        reputation = ans[i][6]
+        if user in activeUsers:
+            if platform in activeUsers[user]:
+                stat = {
+                    "time" : time,
+                    "wins" : wins,
+                    "losses" : losses,
+                    "mode" : mode,
+                    "platform" : platform,
+                    "reputation": reputation
+                }          
+                activeUsers[user][platform].append(stat)
+            else:
+                stat = {
+                    "time" : time,
+                    "wins" : wins,
+                    "losses" : losses,
+                    "mode" : mode,
+                    "platform" : platform,
+                    "reputation": reputation
+                }          
+                activeUsers[user][platform] = [stat]
         else:
             stat = {
-                "time" : time,
-                "wins" : wins,
-                "losses" : losses,
-                "mode" : mode,
-                "platform" : platform,
-                "reputation": reputation
-            }          
+                    "time" : time,
+                    "wins" : wins,
+                    "losses" : losses,
+                    "mode" : mode,
+                    "platform" : platform,
+                    "reputation": reputation
+            } 
+            activeUsers[user] = {}
             activeUsers[user][platform] = [stat]
-    else:
-        stat = {
-                "time" : time,
-                "wins" : wins,
-                "losses" : losses,
-                "mode" : mode,
-                "platform" : platform,
-                "reputation": reputation
-        } 
-        activeUsers[user] = {}
-        activeUsers[user][platform] = [stat]
+    except:
+        ...
 
 print()
 

@@ -15,10 +15,12 @@ if len(sys.argv) < 2:
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("compiledUsers-09-04-1.csv","r")
+userFile = open("compiledUsers-10-23-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
+threads = []
+threadData = {}
 
 for line in usersFileLines:
     splitLine = line.split(",")
@@ -41,6 +43,22 @@ nonExistantUsersList = nonExistantUsersFile.readlines()
 failedUsersDict = {}
 for user in nonExistantUsersList:
     failedUsersDict[user] = True
+
+def constructUserCheckHashmap():
+    userFile = open("compiledUsers-10-23-1.csv","r")
+    usersFileLines = userFile.readlines()
+    userFile.close()
+    userCheckHashmap = {}
+    # print()
+    for line in usersFileLines:
+        splitLine = line.split(",")
+        platform = splitLine[0]
+        username = splitLine[1][0:-1]
+        splicedUsername = username.split("%20")
+        splicedUsername = " ".join(splicedUsername)
+        userCheckHashmap[f"{platform},{splicedUsername}"] = 1
+        # print(f"\r{platform} : {username}",end="")
+    return userCheckHashmap
 
 # turns tet of the format 123,321 into an integer
 def textToInt(text):
@@ -223,6 +241,23 @@ def parseModes(modesTxt):
 
     return modes
 
+def progThread(id):
+    totalUsers = len(users)
+    while(len(users) > 0):
+
+        display = ""
+
+        progress = 100 - ((len(users) / totalUsers) * 100)
+
+        for thread in threadData:
+            display += f"{thread} : ΔT = {threadData[thread]['time']:.2f} \t"
+
+        display += f"{progress:.2f}%"
+        print(f"\r{display}",end="")
+        time.sleep(1)
+
+
+
 def downloadThread(id):
     conn = sqlite3.connect("FH.db")
     crsr = conn.cursor()
@@ -236,12 +271,18 @@ def downloadThread(id):
     # opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
+    opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check')
     # opts.add_argument("--unsafe-pac-url")  
-    uc.TARGET_VERSION  = 104
-    driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    # uc.TARGET_VERSION  = 104
+    # driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\\Program Files\\\Google\\\Chrome\\Application\\new_chrome.exe")
+    driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    # driver = uc.Chrome(options=opts)
     driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
     time.sleep(10)
     num = 0
+
+    userCheckHashmap=constructUserCheckHashmap()
+
     while len(users) > 0:
         mutex.acquire()
         user = users.pop()
@@ -268,10 +309,10 @@ def downloadThread(id):
             if len(ans) == 1:
                 # if the player exists and is inactive update them once every 2 weeks
                 if(time.time() - ans[-1][2] > (86400 * 14)):
-                    # timeForUpdate = True
-                    timeForUpdate = False
-                else:
                     timeForUpdate = True
+                    # timeForUpdate = False
+                else:
+                    timeForUpdate = False
             else:
                 timeBetweenUpdates = ans[-1][2] - ans[-2][2]
                 # if the player has not played in a month update them once a week
@@ -280,7 +321,7 @@ def downloadThread(id):
                         timeForUpdate = True
                 # if the player has played in the last 30 days update them once a day
                 else:
-                    if(time.time() - ans[-1][2] > (86400 * 2)):
+                    if(time.time() - ans[-1][2] > (86400 * 1)):
                         timeForUpdate = True
         if len(ans) == 0:
             timeForUpdate = True
@@ -289,8 +330,7 @@ def downloadThread(id):
 
         url = ""
         html_data = ""
-        if lineString in failedUsersDict:
-            print("me")
+
         if lineString not in failedUsersDict and timeForUpdate:
             playerStartTime = time.time()
             try:
@@ -298,11 +338,11 @@ def downloadThread(id):
                 # platform = "xbl"
                 # username = "aqaurium"
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
-                print(url)
+                # print(url)
                 driver.get(url)
                 time.sleep(0.5)
-                print("Overview")
-                overview = ""
+                # print("Overview")
+                overview = "" 
                 success = False
                 startTime = time.time()
                 # retry loop to avoid using sleeps
@@ -316,13 +356,13 @@ def downloadThread(id):
                             if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
                                 raise Exception("404 Error")
                         except Exception as e:
-                            if e == "404 Error":
+                            if e.message == "404 Error":
                                 raise Exception("404 Error")
 
                 if not success:
                     raise Exception("Could not find overview elements in alloted time")
 
-                print("Tabs")
+                # print("Tabs")
                 tabs = ""
                 success = False
                 startTime = time.time()
@@ -337,7 +377,7 @@ def downloadThread(id):
                     raise Exception("Could not find tab elements in alloted time")
 
                 tabs[1].click()
-                print("Heros")
+                # print("Heros")
                 heros = ""
                 success = False
                 startTime = time.time()
@@ -353,7 +393,7 @@ def downloadThread(id):
                 
 
                 tabs[2].click()
-                print("Modes")
+                # print("Modes")
                 modes = ""
                 success = False
                 startTime = time.time()
@@ -367,7 +407,7 @@ def downloadThread(id):
                 if not success:
                     raise Exception("Could not find mode data in alloted time")
                 
-                print("Begin Proccessing...")
+                # print("Begin Proccessing...")
 
                 splitUsername = username.split("%20")
                 FormattedUsername = " ".join(splitUsername)
@@ -379,21 +419,24 @@ def downloadThread(id):
                 }
 
                 pretime = time.time()
-                print("Parse Overview")
+                # print("Parse Overview")
                 overviewData = parseOverview(username=FormattedUsername,platform=platform,overviewTxt=overview)
-                print("Parse Modes")
+                # print("Parse Modes")
                 overviewData['modes'] = parseModes(modes)
-                print("Parse Heros")
+                # print("Parse Heros")
                 overviewData['heros'] = parseHeros(heros)
                     
 
-                print("Add Player To Dict")
+                # print("Add Player To Dict")
                 players[FormattedUsername][platform].append(overviewData)
                 posttime = time.time()
-                print(f"DeltaT = {posttime - pretime:.2f}")
+                deltaT = posttime - playerStartTime
+                mutex.acquire()
+                threadData[str(id)]["time"] = deltaT
+                mutex.release()
                 num += 1
-                print(players[FormattedUsername])
-                print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {FormattedUsername}") # current user
+                # print(players[FormattedUsername])
+                # print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {FormattedUsername}") # current user
 
                 if(num % 50 == 0):
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
@@ -411,6 +454,13 @@ def downloadThread(id):
                     try:
                         # handles non existant users
                         if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
+                            
+                            splitUsername = username.split("%20")
+                            FormattedUsername = " ".join(splitUsername)
+
+                            if(f"{platform},{FormattedUsername}" not in userCheckHashmap):
+                                print("Oopsie I made a Fucky Wucky")
+
                             mutex.acquire()
                             failedUsersFile = open("failedUsers.csv","a")
                             failedUsersFile.write(platform + "," + FormattedUsername + "\n")
@@ -430,7 +480,7 @@ def downloadThread(id):
                     time.sleep(5)
             
             endTime = time.time()
-            print(f"T = {(endTime - playerStartTime):.2f}")
+            # print(f"T = {(endTime - playerStartTime):.2f}")
             if(endTime - playerStartTime < 1):
                 mutex.acquire()
                 users.append((platform,username))
@@ -448,12 +498,21 @@ def downloadThread(id):
 
 number = len(users)
 
-threads = []
+for n in range(arg):
+    threadData[f"{n}"] = {
+        "time" : 0,
+        "stage": "",
+        "count": ""
+    }
+
+gui = threading.Thread(target=progThread, args=[99])
+gui.start()
+threads.append(gui)
 for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(30)
+    time.sleep(10)
 
 for item in threads:
     item.join()

@@ -38,9 +38,12 @@ def downloadThread(id):
     driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
 
     timeToStop = False
-    skip = 0
+    skip = 380500
+    cutoffCounter = 0
     while not timeToStop:
-        url = f"https://api.tracker.gg/api/v1/for-honor/standard/leaderboards?type=stats&platform=all&board=KdRatioP&gameType=pvp&skip={skip}&take=100"
+        cutoffCounter += 1
+        # url = f"https://api.tracker.gg/api/v1/for-honor/standard/leaderboards?type=stats&platform=all&board=KdRatioP&gameType=pvp&skip={skip}&take=100"
+        url = f"https://api.tracker.gg/api/v1/for-honor/standard/leaderboards?type=stats&platform=all&board=Wins&gameType=pvp&skip={skip}&take=100"
         driver.get(url)
         time.sleep(1)
         try:
@@ -51,16 +54,26 @@ def downloadThread(id):
             time.sleep(1)
             data = json.loads(driver.find_element(by=By.TAG_NAME,value="pre").text)["data"]["items"]
 
+        # print(1)
+
         playerList = getData(data)
         if len(playerList) > 0:
             players.extend(playerList)
         else:
             timeToStop = True
+        if cutoffCounter > 4000:
+            timeToStop = True
+
+        # print(2)        
+
         skip += 100
         print(f"users scraped = {skip}")
-        file = open("usersTesting09-02-1.txt","a")
+        file = open("usersTesting12-03-1.txt","a")
         for user in playerList:
-            file.write(user[0] + "," + user[1] + "\n")
+            try:
+                file.write(user[0] + "," + user[1] + "\n")
+            except:
+                print("weird break")
         file.close()
 
     
