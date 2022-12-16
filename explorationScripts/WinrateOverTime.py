@@ -64,18 +64,17 @@ def getActiveUsersFromData(SQLData):
     print()
     activeUsers = {}
     counter = 0
-    currentUserData ={}
     for i in range(len(SQLData)):
         counter += 1
         if counter % 10000 == 0:
             print(f"\rentries parsed: {counter} / {len(SQLData)}")
-        currentUserData['hero'] = SQLData[i][0]
-        currentUserData['user'] = SQLData[i][1]
-        currentUserData['time'] = SQLData[i][2]
-        currentUserData['platform'] = SQLData[i][3]
-        currentUserData['wins'] = SQLData[i][4]
-        currentUserData['losses'] = SQLData[i][5]
-        currentUserData['timePlayed'] = SQLData[i][6]
+        hero = SQLData[i][0]
+        user = SQLData[i][1]
+        time = SQLData[i][2]
+        platform = SQLData[i][3]
+        wins = SQLData[i][4]
+        losses= SQLData[i][5]
+        timePlayed = SQLData[i][6]
 
         if user not in activeUsers:
             activeUsers[user] = {}
@@ -85,24 +84,34 @@ def getActiveUsersFromData(SQLData):
         
         if len(activeUsers[user][platform][0]) == 0:
             stat = {
-                "time" : currentUserData['time'],
+                "time" : time,
                 "heros": {}
             }
 
             activeUsers[user][platform][0](stat)
 
 
-        if activeUsers[user][platform][0]['time'] == currentUserData["time"]:
+        if activeUsers[user][platform][0]['time'] == time:
             activeUsers[user][platform][0]['heros'][hero]  = {
-                "wins" : currentUserData['wins'],
-                "losses" : currentUserData['losses'],
-                "time" : currentUserData['timePlayed']
+                "wins" : wins,
+                "losses" : losses,
+                "time" : timePlayed
             }
         
-        if activeUsers[user][platform][0]['time'] != currentUserData["time"]:
+        if activeUsers[user][platform][0]['time'] != time:
             #todo: finish reworked conversion from sql data to python dict
             # still need to add what to do when the hero entry is from a different dl than the one currently stored
-            ...
+            stat = {
+                "time" : time,
+                "heros": {}
+            }
+            activeUsers[user][platform][1] = stat
+            activeUsers[user][platform][0]['heros'][hero]  = {
+                "wins" : wins,
+                "losses" : losses,
+                "time" : timePlayed
+            }
+
                                                         
             
 
