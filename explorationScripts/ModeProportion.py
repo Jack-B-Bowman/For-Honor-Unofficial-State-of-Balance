@@ -10,6 +10,8 @@ crsr = conn.cursor()
 seasonStartDate = 1656547619 # post conq nerf 
 # seasonStartDate = 1658970014
 seasonStartDate = 1659742490
+postSeasonStartDate = 1666137644 # crossplay phase 2
+
 
 # gets number of matches in each mode for each player
 SQLString = f"""
@@ -95,7 +97,7 @@ for player in statsByPlayer:
             calculatedTotal += matchesPlayed
             totals[mode] += matchesPlayed
     if calculatedTotal < localTotal:
-        totals["Brawl+Ranked"] += localTotal - calculatedTotal
+        totals["missing"] += localTotal - calculatedTotal
 
 
 print(json.dumps(totals,indent=4))

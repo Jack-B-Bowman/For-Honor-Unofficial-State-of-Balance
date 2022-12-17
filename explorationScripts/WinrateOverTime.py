@@ -16,6 +16,63 @@ seasonStartDate = 1663248434 # dodge
 postSeasonStartDate = 1666137644 # crossplay phase 2
 # postSeasonStartDate = 1666656044 # kensei hitstun+matchmaking
 
+colours = [
+    "black",
+    "maroon",
+    "orangered",
+    "gold",
+    "darkolivegreen",
+    "green",
+    "turquoise",
+    "dodgerblue",
+    "navy",
+    "purple"
+]
+
+factionKey = {
+    "Samurai": {
+        "Aramusha" : colours[0],
+        "Hitokiri" : colours[1],
+        "Kensei"   : colours[2],
+        "Kyoshin"  : colours[3],
+        "Nobushi"  : colours[4],
+        "Orochi"   : colours[5],
+        "Shinobi"  : colours[6],
+        "Shugoki"  : colours[7]
+    },
+    "Knights": {
+        "Black Prior" : colours[0],
+        "Centurion"   : colours[1],
+        "Conqueror"   : colours[2],
+        "Gladiator"   : colours[3],
+        "Gryphon"     : colours[4],
+        "Lawbringer"  : colours[5],
+        "Peacekeeper" : colours[6],
+        "Warden"      : colours[7],
+        "Warmonger"   : colours[8],
+    },
+    "Vikings": {
+        "Berserker"   : colours[0],
+        "Highlander"  : colours[1],
+        "Jormungandr" : colours[2],
+        "Raider"      : colours[3],
+        "Shaman"      : colours[4],
+        "Valkyrie"    : colours[5],
+        "Warlord"     : colours[6],
+    },
+    "Wu Lin" : {
+        "Jiang Jun" : colours[0],
+        "Nuxia"     : colours[1],
+        "Shaolin"   : colours[2],
+        "Tiandi"    : colours[3],
+        "Zhanhu"    : colours[4],
+    },
+    "Outlanders" : {
+        "Pirate" : colours[9],
+        "Medjay" : colours[8],
+    }
+}
+
 dates = {
     "7 12 2022" : {
         "version" : "2.40.0",
@@ -56,58 +113,11 @@ dates = {
     },
 }
 
-sqlPostSeason = f"""
-select name,
-       username,
-       UTCSeconds,
-       platform,
-       wins,
-       losses,
-	   timePlayed
-from (
-  select name, 
-         username, 
-         UTCSeconds,
-         max(UTCSeconds) over (partition by username) as max_date,
-         min(UTCSeconds) over (partition by username) as min_date,
-         platform,
-         wins,
-         losses,
-		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds > {postSeasonStartDate} )
-)
-where UTCSeconds = max_date OR UTCSeconds = min_date;
-"""
-sqlPreSeason = f"""
-select name,
-       username,
-       UTCSeconds,
-       platform,
-       wins,
-       losses,
-	   timePlayed
-from (
-  select name, 
-         username, 
-         UTCSeconds,
-         max(UTCSeconds) over (partition by username) as max_date,
-         min(UTCSeconds) over (partition by username) as min_date,
-         platform,
-         wins,
-         losses,
-		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {postSeasonStartDate} )
-)
-where UTCSeconds = max_date OR UTCSeconds = min_date;
-"""
-
 
 def dateToUnixTime(date):
     dateData = date.split()
     dateTime = datetime.datetime(int(dateData[2]),int(dateData[1]),int(dateData[0]))
     return time.mktime(dateTime.timetuple())
-
-
 
 def getActiveUsersFromData(SQLData):
     print()
@@ -160,13 +170,6 @@ def getActiveUsersFromData(SQLData):
                 "losses" : losses,
                 "time" : timePlayed
             }
-
-                                                        
-            
-
-
-
-    
     print()
     return activeUsers
 
@@ -266,7 +269,8 @@ def getHeroWinrateAverages(activeUsers):
                             avgPlayerWinrates[hero].append(winsDif/(winsDif + lossesDif))
 
                     except Exception as e:
-                        print(e)
+                        ...
+                        # print(e)
     
     return {
         "playerAvgsByHero" : avgPlayerWinrates,
@@ -275,21 +279,88 @@ def getHeroWinrateAverages(activeUsers):
         "totalMatches"     : totalMatches
     }
 
-datesToUse = ["28 7 2022","15 9 2022","20 10 2022","1 1 9999"]
+datesToUse = ["27 4 2022","30 6 2022","28 7 2022","15 9 2022","20 10 2022","3 11 2022","1 1 2100"]
 listOfWinrateData = []
 
-crsr.execute(sqlPostSeason)
-ans = crsr.fetchall()
+for i in range(len(datesToUse) - 1):
+    print(f"getting data from {datesToUse[i]} to {datesToUse[i+1]}")
+    seasonStartDate = dateToUnixTime(datesToUse[i])
+    seasonEndDate = dateToUnixTime(datesToUse[i+1])
+    sql = f"""
+        select name,
+            username,
+            UTCSeconds,
+            platform,
+            wins,
+            losses,
+            timePlayed
+        from (
+        select name, 
+                username, 
+                UTCSeconds,
+                max(UTCSeconds) over (partition by username) as max_date,
+                min(UTCSeconds) over (partition by username) as min_date,
+                platform,
+                wins,
+                losses,
+                timePlayed
+        from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+        FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
+        )
+        where UTCSeconds"""
+    print("executing SQL")
+    crsr.execute(sql)
+    ans = crsr.fetchall()
+    print("getting active users from data")
+    activeUsers = getActiveUsersFromData(SQLData=ans)
+    print("getting hero data from user data")
+    winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
+    listOfWinrateData.append(winrateData)
 
-activeUsers = getActiveUsersFromData(SQLData=ans)
 
-winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'w')
+file.write(json.dumps(listOfWinrateData))
+file.close()
 
-avgPlayerWinrates = winrateData['playerAvgsByHero']
-totalWinrates = winrateData['totalWinrates']
-includedUserCount = winrateData['includedUserCount']
-totalMatches = winrateData['totalMatches']
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'r')
+listOfWinrateData = json.load(file)
+file.close()
 
-print("n = " + str(totalMatches))
-print("number of players = " + str(includedUserCount))
-print("winrate")
+
+
+for faction in factionKey:
+    plt.rcdefaults()
+    fig, ax = plt.subplots()
+    factionHeros = factionKey[faction]
+    for hero in factionHeros:
+        x = []
+        y = []
+        xTraverse = 0
+        for item in listOfWinrateData:
+            avgPlayerWinrates = item['playerAvgsByHero']
+            totalWinrates = item['totalWinrates']
+            includedUserCount = item['includedUserCount']
+            totalMatches = item['totalMatches']
+
+            xTraverse +=1
+            x.append(xTraverse)
+            y.append(np.mean(avgPlayerWinrates[hero]) * 100)
+        plt.plot(x,y, color=factionHeros[hero],label=hero)
+    plt.xlabel('Date', fontsize=15)
+    plt.ylabel('Winrate (%)', fontsize=15)
+    plt.ylim(bottom=40, top=70)
+    dateString = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+    plt.title(f"{faction} Winrate Over Time")
+    plt.legend()
+    # plt.figure(figsize=(50,25))
+    plt.savefig(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\WinrateOverTimeCharts\\{faction}_{dateString}.png")
+    plt.show()
+    plt.close()
+    ax.clear()
+
+
+
+
+# print("n = " + str(totalMatches))
+# print("number of players = " + str(includedUserCount))
+# print("winrate")
