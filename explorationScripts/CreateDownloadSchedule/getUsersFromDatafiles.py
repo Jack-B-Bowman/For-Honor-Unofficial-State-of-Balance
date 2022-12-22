@@ -1,0 +1,32 @@
+import json
+import os
+import time
+# gets usernames and platforms of from directory of standard script output files
+
+directory = "D:\\Archive\\UserScraper\\datafiles12-18-2022-16-21"
+listOfNames = {}
+
+print()
+for filename in os.listdir(directory):
+
+    f = os.path.join(directory, filename)
+    # checking if it is a file
+    if os.path.isfile(f) and f[-4:] == 'json':
+        file = open(f,"r")
+        print(f"\r{filename}",end="")
+        try:
+            newData = json.load(file)
+            for player in newData:
+                for platform in newData[player]:
+                    if len(newData[player][platform]) > 0:
+                        listOfNames[player + "," + platform] = time.time()
+
+
+        except Exception as e:
+            print(e)
+            print(filename)
+print()
+print("dumping data...")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","w")
+json.dump(listOfNames,file)
+file.close()

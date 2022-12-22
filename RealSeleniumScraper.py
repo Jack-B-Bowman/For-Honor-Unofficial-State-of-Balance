@@ -9,18 +9,41 @@ from selenium.webdriver.common.by import By
 import re
 mutex = threading.Lock()
 
+"""
+! 2022-12-19 https://tracker.gg
+tracker.gg##.overlay
+tracker.gg##.warden-challenge.container
+tracker.gg##body:style(overflow:auto!important)
+
+||tracker.gg/sw.js$script,1p,important
+
+! 2022-12-19 https://newassets.hcaptcha.com
+||newassets.hcaptcha.com/c/b4b4ffc/hsw.js$script,domain=newassets.hcaptcha.com
+||newassets.hcaptcha.com/i/b4b4ffc/e$xhr,domain=newassets.hcaptcha.com
+||hcaptcha.com/checksiteconfig?v=220a550&host=tracker.gg&sitekey=719e6c36-9055-4bc9-b01f-720bceda362e&sc=1&swa=1$xhr,domain=newassets.hcaptcha.com
+
+! 2022-12-19 https://tracker.gg
+||newassets.hcaptcha.com/captcha/v1/220a550/static/hcaptcha.html$subdocument,domain=tracker.gg
+
+"""
+
+
 arg = 0
 if len(sys.argv) < 2:
-    arg = 4
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("compiledUsers-10-23-1.csv","r")
+userFile = open("compiledUsers-12-04-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
 threads = []
 threadData = {}
+
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","r")
+downloadSchedule = json.load(file)
+file.close()
 
 for line in usersFileLines:
     splitLine = line.split(",")
@@ -44,8 +67,11 @@ failedUsersDict = {}
 for user in nonExistantUsersList:
     failedUsersDict[user] = True
 
+
+
+
 def constructUserCheckHashmap():
-    userFile = open("compiledUsers-10-23-1.csv","r")
+    userFile = open("compiledUsers-12-04-1.csv","r")
     usersFileLines = userFile.readlines()
     userFile.close()
     userCheckHashmap = {}
@@ -297,33 +323,12 @@ def downloadThread(id):
         fortmattedUN = " ".join(splitUsername)
         
 
-        sql = f"""SELECT username,platform,UTCSeconds from stat where username='{fortmattedUN}' and platform='{platform}' and UTCSeconds < 1661262680"""
-        crsr.execute(sql)
-        ans = crsr.fetchall()
-        ans.sort(key=lambda y:y[2])
-        # if the player exists
-        timeForUpdate = False
-        # does the player exist
-        if len(ans) > 0: 
-            # is the player inactive
-            if len(ans) == 1:
-                # if the player exists and is inactive update them once every 2 weeks
-                if(time.time() - ans[-1][2] > (86400 * 14)):
-                    timeForUpdate = True
-                    # timeForUpdate = False
-                else:
-                    timeForUpdate = False
+        if fortmattedUN + "," + platform in downloadSchedule:
+            if time.time() > downloadSchedule[fortmattedUN + "," + platform]:
+                timeForUpdate = True
             else:
-                timeBetweenUpdates = ans[-1][2] - ans[-2][2]
-                # if the player has not played in a month update them once a week
-                if timeBetweenUpdates > 86400 * 30:
-                    if(time.time() - ans[-1][2] > (86400 * 7)):
-                        timeForUpdate = True
-                # if the player has played in the last 30 days update them once a day
-                else:
-                    if(time.time() - ans[-1][2] > (86400 * 1)):
-                        timeForUpdate = True
-        if len(ans) == 0:
+                timeForUpdate = False
+        else:
             timeForUpdate = True
 
         lineString = user[0] + "," + fortmattedUN + "\n"
@@ -341,12 +346,15 @@ def downloadThread(id):
                 # print(url)
                 driver.get(url)
                 time.sleep(0.5)
+                # print("get-time -> {time.time() - playerStartTime}")
+                # driver.execute_script("document.getElementsByTagName(arguments[0])[0].className = arguments[1]","body","")
                 # print("Overview")
                 overview = "" 
                 success = False
                 startTime = time.time()
                 # retry loop to avoid using sleeps
                 while not success and time.time() - startTime < 10:
+                    # driver.execute_script("document.getElementsByTagName(arguments[0])[0].className = arguments[1]","body","")
                     try:
                         overview = driver.find_element(by=By.CLASS_NAME,value="segment-stats.card.bordered.header-bordered.responsive").text
                         success = True
@@ -368,6 +376,7 @@ def downloadThread(id):
                 startTime = time.time()
                 # retry loop to avoid using sleeps
                 while not success and time.time() - startTime < 3:
+                    # driver.execute_script("document.getElementsByTagName(arguments[0])[0].className = arguments[1]","body","")
                     try:
                         tabs = driver.find_elements(by=By.CLASS_NAME,value="trn-tabs__item")
                         success = True
@@ -383,6 +392,7 @@ def downloadThread(id):
                 startTime = time.time()
                 # retry loop to avoid using sleeps
                 while not success and time.time() - startTime < 3:
+                    # driver.execute_script("document.getElementsByTagName(arguments[0])[0].className = arguments[1]","body","")
                     try:
                         heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
                         success = True
@@ -393,6 +403,14 @@ def downloadThread(id):
                 
 
                 tabs[2].click()
+                heroTabLoaded = True
+                while heroTabLoaded and time.time() - startTime < 3:
+                    # driver.execute_script("document.getElementsByTagName(arguments[0])[0].className = arguments[1]","body","")
+                    try:
+                        heros = driver.find_element(by=By.CLASS_NAME,value="trn-grid.trn-grid--small.heroes").text
+                        heroTabLoaded = True
+                    except:
+                        heroTabLoaded = False
                 # print("Modes")
                 modes = ""
                 success = False
@@ -422,10 +440,14 @@ def downloadThread(id):
                 # print("Parse Overview")
                 overviewData = parseOverview(username=FormattedUsername,platform=platform,overviewTxt=overview)
                 # print("Parse Modes")
-                overviewData['modes'] = parseModes(modes)
+                try:
+                    overviewData['modes'] = parseModes(modes)
+                except:
+                    overviewData['modes'] = parseModes(modes)
                 # print("Parse Heros")
                 overviewData['heros'] = parseHeros(heros)
-                    
+                posttime = time.time()
+                print(f"processing time = {posttime - pretime}")
 
                 # print("Add Player To Dict")
                 players[FormattedUsername][platform].append(overviewData)
@@ -439,6 +461,7 @@ def downloadThread(id):
                 # print(f"ThreadID : {id}\n  count : {str(num)} \n  user : {FormattedUsername}") # current user
 
                 if(num % 50 == 0):
+
                     dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
                     dataFile.write(json.dumps(players))
                     dataFile.close() 
@@ -450,6 +473,9 @@ def downloadThread(id):
 
 
             except Exception as e:
+                # print()
+                # print(e)
+                # print(fortmattedUN,platform)
                 try:
                     try:
                         # handles non existant users
@@ -512,7 +538,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(10)
+    time.sleep(2)
 
 for item in threads:
     item.join()

@@ -279,84 +279,137 @@ def getHeroWinrateAverages(activeUsers):
         "totalMatches"     : totalMatches
     }
 
-datesToUse = ["27 4 2022","30 6 2022","28 7 2022","15 9 2022","20 10 2022","3 11 2022","1 1 2100"]
+datesToUse = ["28 7 2022","15 9 2022","20 10 2022","3 11 2022","1 1 2100"]
 listOfWinrateData = []
 
-for i in range(len(datesToUse) - 1):
-    print(f"getting data from {datesToUse[i]} to {datesToUse[i+1]}")
-    seasonStartDate = dateToUnixTime(datesToUse[i])
-    seasonEndDate = dateToUnixTime(datesToUse[i+1])
-    sql = f"""
-        select name,
-            username,
-            UTCSeconds,
-            platform,
-            wins,
-            losses,
-            timePlayed
-        from (
-        select name, 
-                username, 
-                UTCSeconds,
-                max(UTCSeconds) over (partition by username) as max_date,
-                min(UTCSeconds) over (partition by username) as min_date,
-                platform,
-                wins,
-                losses,
-                timePlayed
-        from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
-        FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
-        )
-        where UTCSeconds"""
-    print("executing SQL")
-    crsr.execute(sql)
-    ans = crsr.fetchall()
-    print("getting active users from data")
-    activeUsers = getActiveUsersFromData(SQLData=ans)
-    print("getting hero data from user data")
-    winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
-    listOfWinrateData.append(winrateData)
+# for i in range(len(datesToUse) - 1):
+#     print(f"getting data from {datesToUse[i]} to {datesToUse[i+1]}")
+#     seasonStartDate = dateToUnixTime(datesToUse[i])
+#     seasonEndDate = dateToUnixTime(datesToUse[i+1])
+#     sql = f"""
+#         select name,
+#             username,
+#             UTCSeconds,
+#             platform,
+#             wins,
+#             losses,
+#             timePlayed
+#         from (
+#         select name, 
+#                 username, 
+#                 UTCSeconds,
+#                 max(UTCSeconds) over (partition by username) as max_date,
+#                 min(UTCSeconds) over (partition by username) as min_date,
+#                 platform,
+#                 wins,
+#                 losses,
+#                 timePlayed
+#         from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+#         FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
+#         )
+#         where UTCSeconds"""
+#     print("executing SQL")
+#     crsr.execute(sql)
+#     ans = crsr.fetchall()
+#     print("getting active users from data")
+#     activeUsers = getActiveUsersFromData(SQLData=ans)
+#     print("getting hero data from user data")
+#     winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
+#     listOfWinrateData.append(winrateData)
 
 
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'w')
-file.write(json.dumps(listOfWinrateData))
-file.close()
+# file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'w')
+# file.write(json.dumps(listOfWinrateData))
+# file.close()
 
 file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'r')
 listOfWinrateData = json.load(file)
 file.close()
 
+yValuesByHero = {}
+
+fig, ax = plt.subplots()
+
+xInterval = np.arange(30)
+
+for item in listOfWinrateData:
+    avgPlayerWinrates = item['playerAvgsByHero']
+    for hero in avgPlayerWinrates:
+        
+        if hero not in yValuesByHero:
+            yValuesByHero[hero] = []
+        
+        yValuesByHero[hero].append(np.mean(avgPlayerWinrates[hero]) * 100)
+
+bars = []
+width = 0.1
+
+for hero in yValuesByHero:
+    first = xInterval + width/(len(listOfWinrateData))
+    second = yValuesByHero[hero]
+    bar = ax.bar(first,second,width)
+    bars.append(bar)
+plt.show()
 
 
-for faction in factionKey:
-    plt.rcdefaults()
-    fig, ax = plt.subplots()
-    factionHeros = factionKey[faction]
-    for hero in factionHeros:
-        x = []
-        y = []
-        xTraverse = 0
-        for item in listOfWinrateData:
-            avgPlayerWinrates = item['playerAvgsByHero']
-            totalWinrates = item['totalWinrates']
-            includedUserCount = item['includedUserCount']
-            totalMatches = item['totalMatches']
+# labels = ['G1', 'G2', 'G3', 'G4', 'G5']
+# men_means = [20, 34, 30, 35, 27]
+# women_means = [25, 32, 34, 20, 25]
 
-            xTraverse +=1
-            x.append(xTraverse)
-            y.append(np.mean(avgPlayerWinrates[hero]) * 100)
-        plt.plot(x,y, color=factionHeros[hero],label=hero)
-    plt.xlabel('Date', fontsize=15)
-    plt.ylabel('Winrate (%)', fontsize=15)
-    plt.ylim(bottom=40, top=70)
-    dateString = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
-    plt.title(f"{faction} Winrate Over Time")
-    plt.legend()
-    # plt.figure(figsize=(50,25))
-    plt.savefig(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\WinrateOverTimeCharts\\{faction}_{dateString}.png")
-    plt.show()
-    plt.close()
-    ax.clear()
+# x = np.arange(6)  # the label locations
+# width = 0.1  # the width of the bars
+
+# fig, ax = plt.subplots()
+# rects1 = ax.bar(x - 2*width, men_means, width, label='Men')
+# rects1 = ax.bar(x - width, men_means, width, label='Men')
+# rects2 = ax.bar(x  , women_means, width, label='Women')
+# rects3 = ax.bar(x + width, women_means, width, label='Women')
+# rects3 = ax.bar(x + 2*width, women_means, width, label='Women')
+
+# # Add some text for labels, title and custom x-axis tick labels, etc.
+# ax.set_ylabel('Scores')
+# ax.set_title('Scores by group and gender')
+# # ax.set_xticks(x,labels)
+# ax.legend()
+
+# ax.bar_label(rects1, padding=3)
+# ax.bar_label(rects2, padding=3)
+
+# fig.tight_layout()
+
+# plt.show()
+
+# for faction in factionKey:
+#     plt.rcdefaults()
+#     fig, ax = plt.subplots()
+#     factionHeros = factionKey[faction]
+#     xOffset = 0.0
+#     for hero in factionHeros:
+#         x = []
+#         y = []
+#         xTraverse = 0
+#         for item in listOfWinrateData:
+#             avgPlayerWinrates = item['playerAvgsByHero']
+#             totalWinrates = item['totalWinrates']
+#             includedUserCount = item['includedUserCount']
+#             totalMatches = item['totalMatches']
+
+#             xOffset += 0.0005
+#             xTraverse +=1
+#             x.append(xTraverse + xOffset)
+#             y.append(np.mean(avgPlayerWinrates[hero]) * 100)
+#         plt.step(x,y, color=factionHeros[hero],label=hero)
+#     plt.xlabel('Date', fontsize=15)
+#     plt.ylabel('Winrate (%)', fontsize=15)
+#     # plt.ylim(bottom=40, top=70)
+#     dateString = datetime.datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
+#     plt.title(f"{faction} Winrate Over Time")
+#     plt.legend()
+#     # plt.figure(figsize=(50,25))
+#     plt.savefig(f"C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\WinrateOverTimeCharts\\{faction}_{dateString}.png")
+#     plt.show()
+#     plt.close()
+    # ax.clear()
 
 
 
