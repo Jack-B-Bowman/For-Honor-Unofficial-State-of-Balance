@@ -318,7 +318,7 @@ def downloadThread(id):
         timeForUpdate = False
         platform = user[0]
         username = user[1]
-
+ 
         splitUsername = username.split("%20")
         fortmattedUN = " ".join(splitUsername)
         
