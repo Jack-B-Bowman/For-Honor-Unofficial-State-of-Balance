@@ -3,7 +3,7 @@ import os
 import time
 # gets usernames and platforms of from directory of standard script output files
 
-directory = "D:\\Archive\\UserScraper\\datafiles12-18-2022-16-21"
+directory = "D:\\Archive\\UserScraper\\datafiles12-31-2022-00-40"
 listOfNames = {}
 
 print()
@@ -27,6 +27,6 @@ for filename in os.listdir(directory):
             print(filename)
 print()
 print("dumping data...")
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","w")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames1231.json","w")
 json.dump(listOfNames,file)
 file.close()

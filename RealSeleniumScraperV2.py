@@ -307,7 +307,7 @@ def downloadThread(id):
             file = open("ERRORLOG.json","r")
             errorlog = json.load(file)
             if user not in errorlog:
-                errorlog[f"{username},{platform}"] = e
+                errorlog[f"{username},{platform}"] = str(e)
             file.close()
             file = open("ERRORLOG.json","w")
             json.dump(errorlog,file)

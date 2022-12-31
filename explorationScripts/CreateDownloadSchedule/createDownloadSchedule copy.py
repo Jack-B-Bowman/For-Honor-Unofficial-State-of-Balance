@@ -16,7 +16,7 @@ crsr = conn.cursor()
 crsr.execute(getNamesSQL)
 ans = crsr.fetchall()
 
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","r")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames1231.json","r")
 lastDownloaded = json.load(file)
 file.close()
 
