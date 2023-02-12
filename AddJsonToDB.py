@@ -152,62 +152,65 @@ globalTime = 0
 modeTime = 0
 heroTime = 0
 hasPlayedTime = 0
-
+counter = 0
 count = 0
 playersUpdated = 0
 print("\ninserting...")
 crsr.execute('BEGIN TRANSACTION')
 for user in newData:
-    # if user == "b1.exe":
-    #     print("me")
-    count += 1
-    if count % 10000 == 0:
-        print(f"\r{count} --> {playersUpdated}",end="")
-        # print(f"insertGlobalTime = {(globalTime):.2f}")
-        # print(f"insertModeTime = {(modeTime):.2f}")
-        # print(f"insertHerolTime = {(heroTime):.2f}")
-        # print(f"hasPlayedTime = {(hasPlayedTime):.2f}")
-    platforms = newData[user]
-    sql = ""
-    for platform in platforms:
-        if len(platforms[platform]) > 0:
-            stats = platforms[platform]
-            for stat in stats:
-                # start = time.time()
-                if(hasPlayed(user,stat)):
-                    playersUpdated+=1
-                    # end = time.time()
-                    # hasPlayedTime += end - start
+    try:
+        # if user == "b1.exe":
+        #     print("me")
+        count += 1
+        if count % 10000 == 0:
+            print(f"\r{count} --> {playersUpdated}",end="")
+            # print(f"insertGlobalTime = {(globalTime):.2f}")
+            # print(f"insertModeTime = {(modeTime):.2f}")
+            # print(f"insertHerolTime = {(heroTime):.2f}")
+            # print(f"hasPlayedTime = {(hasPlayedTime):.2f}")
+        platforms = newData[user]
+        sql = ""
+        for platform in platforms:
+            if len(platforms[platform]) > 0:
+                stats = platforms[platform]
+                for stat in stats:
                     # start = time.time()
-                    try:
-                        insertGlobalStats(stat,lastPlayerID,user)
-                    except Exception as e:
-                        print(e)
-                        print(user,platform)
-                    # end = time.time()
-                    # globalTime += end-start
-                    modes = stat["modes"]
-                    # start = time.time()
-                    for mode in modes:
-                        modeStats = modes[mode]
-                        insertModeStats(modeStats,mode,lastPlayerID,lastModeID)
-                        lastModeID+=1
-                    # end = time.time()
-                    # modeTime += end-start
-                    heros = stat["heros"]
-                    # start = time.time()
-                    for hero in heros:
-                        table = "hero"
-                        heroStats=heros[hero]
-                        if(heroStats["wins"] > 0 or heroStats["losses"] > 0):
-                            insertHeros(heroStats,hero,lastPlayerID,lastHeroID)
-                            lastHeroID+=1
-                    # end = time.time()
-                    # heroTime += end-start
-                    lastPlayerID += 1
-
+                    if(hasPlayed(user,stat)):
+                        playersUpdated+=1
+                        # end = time.time()
+                        # hasPlayedTime += end - start
+                        # start = time.time()
+                        try:
+                            insertGlobalStats(stat,lastPlayerID,user)
+                        except Exception as e:
+                            print(e)
+                            print(user,platform)
+                        # end = time.time()
+                        # globalTime += end-start
+                        modes = stat["modes"]
+                        # start = time.time()
+                        for mode in modes:
+                            modeStats = modes[mode]
+                            insertModeStats(modeStats,mode,lastPlayerID,lastModeID)
+                            lastModeID+=1
+                        # end = time.time()
+                        # modeTime += end-start
+                        heros = stat["heros"]
+                        # start = time.time()
+                        for hero in heros:
+                            table = "hero"
+                            heroStats=heros[hero]
+                            if(heroStats["wins"] > 0 or heroStats["losses"] > 0):
+                                insertHeros(heroStats,hero,lastPlayerID,lastHeroID)
+                                lastHeroID+=1
+                        # end = time.time()
+                        # heroTime += end-start
+                        lastPlayerID += 1
+    except Exception as e:
+        # print(e)
+        counter += 1
         
-print()
+print(f"\nnumber of failed users = {counter}")
 
 
 conn.commit()

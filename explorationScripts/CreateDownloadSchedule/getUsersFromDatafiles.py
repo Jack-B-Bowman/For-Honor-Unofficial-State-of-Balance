@@ -3,7 +3,8 @@ import os
 import time
 # gets usernames and platforms of from directory of standard script output files
 
-directory = "D:\\Archive\\UserScraper\\datafiles12-31-2022-00-40"
+directory = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\datafiles"
+# directory = "D:\\Archive\\UserScraper\\datafiles01-27-2023-14-22"
 listOfNames = {}
 
 print()

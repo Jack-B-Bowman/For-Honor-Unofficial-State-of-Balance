@@ -1,13 +1,14 @@
 import sqlite3
 import json
 import time
+import random
 
 def updateUser(lastUpdatedDate,lastDownloadDate):
     diff = lastDownloadDate - lastUpdatedDate
-    if diff > DAY * 30:
-        return time.time() + DAY * 30
+    if diff > DAY * 40:
+        return random.randint(int(time.time()) + DAY * 7, int(time.time() + DAY * 60))
     else:
-        return time.time() + DAY * 7
+        return random.randint(int(time.time()) + DAY * 7, int(time.time() + DAY * 14))
     
 
 getNamesSQL = """
@@ -16,7 +17,9 @@ FROM stat
 GROUP BY username,platform
 """
 
+
 DAY = 86400
+
 print("getting last updates...")
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()

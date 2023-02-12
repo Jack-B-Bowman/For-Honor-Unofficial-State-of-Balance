@@ -43,8 +43,9 @@ userFile.close()
 users = []
 threads = []
 threadData = {}
+count = 0
 
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","r")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\downloadSchedule.json","r")
 downloadSchedule = json.load(file)
 file.close()
 
@@ -97,7 +98,7 @@ def handle404(driver,platform,formattedUsername,userCheckHashmap):
         if driver.find_element(by=By.TAG_NAME,value="h1").text == "404":
 
             if(f"{platform},{formattedUsername}" not in userCheckHashmap):
-                print("Oopsie I made a Fucky Wucky")
+                print("Oopsie")
 
             mutex.acquire()
             failedUsersFile = open("failedUsers.csv","a")
@@ -109,6 +110,17 @@ def handle404(driver,platform,formattedUsername,userCheckHashmap):
         # handles players who have not played PVP
         if driver.find_element(by=By.TAG_NAME,value="p").text == "Player has not played pvp.":
             time.sleep(1)
+
+def handleNoStat(platform,formattedUsername,userCheckHashmap):
+
+            if(f"{platform},{formattedUsername}" not in userCheckHashmap):
+                print("Oopsie")
+
+            mutex.acquire()
+            failedUsersFile = open("failedUsers.csv","a")
+            failedUsersFile.write(platform + "," + formattedUsername + "\n")
+            failedUsersFile.close()
+            mutex.release()
 
 def waitOnElementByXpath(driver,waitTime,xPath):
     elementExists = False
@@ -215,9 +227,9 @@ def downloadThread(id):
             splitUsername = username.split("%20")
             fortmattedUN = " ".join(splitUsername)
             
-            if fortmattedUN not in downloadSchedule:
+            if fortmattedUN + "," + platform not in downloadSchedule:
                 timeForUpdate = True
-            elif time.time() > downloadSchedule[fortmattedUN + "," + platform]:
+            elif time.time() > downloadSchedule[fortmattedUN + "," + platform] - 86400 * 3:
                 timeForUpdate = True
             else:
                 timeForUpdate = False
@@ -251,6 +263,9 @@ def downloadThread(id):
 
                 if len(getElementsByClass(driver,"content--error")) != 0:
                     handle404(driver,platform,fortmattedUN,userCheckHashmap)
+                
+                if len(getElementsByClass(driver,"lead")) != 0:
+                    handleNoStat(platform,fortmattedUN,userCheckHashmap)
 
                 elif len(getElementsByClass(driver,"trn-tabs__item")) != 0:
                     tabs = getElementsByClass(driver,"trn-tabs__item")
@@ -303,11 +318,11 @@ def downloadThread(id):
                         players = {}
         except Exception as e:
             mutex.acquire()
-            users.append(user)
             file = open("ERRORLOG.json","r")
             errorlog = json.load(file)
             if user not in errorlog:
                 errorlog[f"{username},{platform}"] = str(e)
+                users.append(user)
             file.close()
             file = open("ERRORLOG.json","w")
             json.dump(errorlog,file)

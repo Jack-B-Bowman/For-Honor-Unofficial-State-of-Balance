@@ -4,6 +4,9 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
+import CommonDataAnalysisLib
+
+
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
 
@@ -15,164 +18,6 @@ postSeasonStartDate = 1663248434 # dodge
 seasonStartDate = 1663248434 # dodge
 postSeasonStartDate = 1666137644 # crossplay phase 2
 # postSeasonStartDate = 1666656044 # kensei hitstun+matchmaking
-
-colours = [
-    "black",
-    "maroon",
-    "orangered",
-    "gold",
-    "darkolivegreen",
-    "green",
-    "turquoise",
-    "dodgerblue",
-    "navy",
-    "purple"
-]
-
-factionKey = {
-    "Samurai": {
-        "Aramusha" : colours[0],
-        "Hitokiri" : colours[1],
-        "Kensei"   : colours[2],
-        "Kyoshin"  : colours[3],
-        "Nobushi"  : colours[4],
-        "Orochi"   : colours[5],
-        "Shinobi"  : colours[6],
-        "Shugoki"  : colours[7]
-    },
-    "Knights": {
-        "Black Prior" : colours[0],
-        "Centurion"   : colours[1],
-        "Conqueror"   : colours[2],
-        "Gladiator"   : colours[3],
-        "Gryphon"     : colours[4],
-        "Lawbringer"  : colours[5],
-        "Peacekeeper" : colours[6],
-        "Warden"      : colours[7],
-        "Warmonger"   : colours[8],
-    },
-    "Vikings": {
-        "Berserker"   : colours[0],
-        "Highlander"  : colours[1],
-        "Jormungandr" : colours[2],
-        "Raider"      : colours[3],
-        "Shaman"      : colours[4],
-        "Valkyrie"    : colours[5],
-        "Warlord"     : colours[6],
-    },
-    "Wu Lin" : {
-        "Jiang Jun" : colours[0],
-        "Nuxia"     : colours[1],
-        "Shaolin"   : colours[2],
-        "Tiandi"    : colours[3],
-        "Zhanhu"    : colours[4],
-    },
-    "Outlanders" : {
-        "Pirate" : colours[9],
-        "Medjay" : colours[8],
-    }
-}
-
-dates = {
-    "7 12 2022" : {
-        "version" : "2.40.0",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/5K7gJrsS7BGjegCjnnZydv/patch-notes-2400-for-honor",
-        "notes" : "valk+tiandi rework"
-    },
-
-    "3 11 2022" : {
-        "version" : "2.39.2",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/2hBzypk8Z7LnGX3r2pP64n/patch-notes-2392-for-honor",
-    },
-    "25 10 2022" : {
-        "version" : "2.39.1",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/2U2b9JmaL4m0eAMUy4buFN/patch-notes-2391-for-honor",
-    },
-    "20 10 2022" : {
-        "version" : "2.39.0",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/2203fmh7jD1gohfN25aDRi/patch-notes-2390-for-honor",
-        "notes" : "crosplay phase 2"
-    },
-    "15 9 2022" : {
-        "version" : "2.38.0",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/6yK8Z1hgpAoScO2THLLdYD/patch-notes-2380-for-honor",
-        "notes" : "dodge attack",
-    },
-    "28 7 2022" : {
-        "version" : "2.37.1",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/7Cn4O1wYyV0qXbMOE2gtqI/patch-notes-2371-for-honor",
-        "notes" : "Medjay"
-    },
-    "30 6 2022" : {
-        "version" : "2.36.3",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/1OBhqnANLD7C5Itm7ObLld/patch-notes-2363-for-honor",
-    },
-    "27 4 2022" : {
-        "version" : "2.35.0",
-        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/5Pm3q0Ox2Ed9YRQe3Kuq1m/patch-notes-2351-for-honor",
-    },
-}
-
-
-def dateToUnixTime(date):
-    dateData = date.split()
-    dateTime = datetime.datetime(int(dateData[2]),int(dateData[1]),int(dateData[0]))
-    return time.mktime(dateTime.timetuple())
-
-def getActiveUsersFromData(SQLData):
-    print()
-    activeUsers = {}
-    counter = 0
-    for i in range(len(SQLData)):
-        counter += 1
-        if counter % 10000 == 0:
-            print(f"\rentries parsed: {counter} / {len(SQLData)}",end="")
-        hero = SQLData[i][0]
-        user = SQLData[i][1]
-        time = SQLData[i][2]
-        platform = SQLData[i][3]
-        wins = SQLData[i][4]
-        losses= SQLData[i][5]
-        timePlayed = SQLData[i][6]
-
-        if user not in activeUsers:
-            activeUsers[user] = {}
-        
-        if platform not in activeUsers[user]:
-            activeUsers[user][platform] = [0,0]
-        
-        if activeUsers[user][platform][0] == 0:
-            stat = {
-                "time" : time,
-                "heros": {}
-            }
-
-            activeUsers[user][platform][0] = stat
-
-
-        if activeUsers[user][platform][0]['time'] == time:
-            activeUsers[user][platform][0]['heros'][hero]  = {
-                "wins" : wins,
-                "losses" : losses,
-                "time" : timePlayed
-            }
-        
-        if activeUsers[user][platform][0]['time'] != time and activeUsers[user][platform][1] == 0:
-            stat = {
-                "time" : time,
-                "heros": {}
-            }
-            activeUsers[user][platform][1] = stat
-
-        if activeUsers[user][platform][0]['time'] != time:
-            activeUsers[user][platform][1]['heros'][hero]  = {
-                "wins" : wins,
-                "losses" : losses,
-                "time" : timePlayed
-            }
-    print()
-    return activeUsers
-
 
 def getHeroWinrateAverages(activeUsers):
     avgPlayerWinrates = {
@@ -279,7 +124,7 @@ def getHeroWinrateAverages(activeUsers):
         "totalMatches"     : totalMatches
     }
 
-datesToUse = ["28 7 2022","15 9 2022","20 10 2022","3 11 2022","1 1 2100"]
+datesToUse = ["NA","28 7 2022","15 9 2022","20 10 2022","3 11 2022","7 12 2022","1 1 2100"]
 listOfWinrateData = []
 
 # for i in range(len(datesToUse) - 1):
@@ -322,15 +167,34 @@ listOfWinrateData = []
 # file.write(json.dumps(listOfWinrateData))
 # file.close()
 
+
+# a = np.random.normal(size=200)
+# b = np.random.normal(size=200)
+
+# fig = plt.figure()
+# ax1 = fig.add_subplot(3, 1, 1)
+# ax2 = fig.add_subplot(3, 1, 2)
+# ax3 = fig.add_subplot(3, 1, 3)
+
+# n, bins, patches = ax1.hist(a)
+# ax1.set_xlabel('Angle a (degrees)')
+# ax1.set_ylabel('Frequency')
+
+# n, bins, patches = ax2.hist(b)
+# ax2.set_xlabel('Angle b (degrees)')
+# ax2.set_ylabel('Frequency')
+
+# n, bins, patches = ax3.hist(b)
+# ax3.set_xlabel('Angle b (degrees)')
+# ax3.set_ylabel('Frequency')
+
+# fig.show()
+
 file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'r')
 listOfWinrateData = json.load(file)
 file.close()
 
 yValuesByHero = {}
-
-fig, ax = plt.subplots()
-
-xInterval = np.arange(30)
 
 for item in listOfWinrateData:
     avgPlayerWinrates = item['playerAvgsByHero']
@@ -340,16 +204,51 @@ for item in listOfWinrateData:
             yValuesByHero[hero] = []
         
         yValuesByHero[hero].append(np.mean(avgPlayerWinrates[hero]) * 100)
-
-bars = []
-width = 0.1
-
+    
 for hero in yValuesByHero:
-    first = xInterval + width/(len(listOfWinrateData))
-    second = yValuesByHero[hero]
-    bar = ax.bar(first,second,width)
-    bars.append(bar)
-plt.show()
+    yValuesByHero[hero].insert(0,yValuesByHero[hero][0])
+
+subplots = []
+
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winratesbyhero.json",'w')
+json.dump(yValuesByHero,file,indent=4)
+file.close()
+
+for faction in CommonDataAnalysisLib.factionKey:
+    fig, ax = plt.subplots()
+    offset = 0
+    for hero in CommonDataAnalysisLib.factionKey[faction]:
+        y = yValuesByHero[hero]
+        x = np.arange(len(y))
+        # x = x + offset
+        # offset = (offset + 0.025) * - 1
+        ax.step(x,y,linewidth=2.5,label=hero)
+    ax.set(ylim=(40,70))
+    ax.set_xticklabels(datesToUse)
+    ax.legend()
+    plt.show()
+
+# keys = list(yValuesByHero.keys())
+# width = 1
+# xInterval = np.arange(len(yValuesByHero[keys[0]]))
+# numChartsX = 3
+# numChartsY = math.ceil(len(keys) * (1/numChartsX))
+
+# # fig = plt.figure()
+# # axes = []
+
+# # iCount = 0
+# # for hero in yValuesByHero:
+# #     y = yValuesByHero[hero]
+# #     iCount += 1
+# #     ax = fig.add_subplot(numChartsY,numChartsX,iCount)
+# #     # n, bins, patches = ax.bar(yValuesByHero[hero],xInterval)
+# #     ax.bar(yValuesByHero[hero],xInterval)
+# #     ax.set_xlabel('Update')
+# #     ax.set_ylabel('Winrate (%)')
+
+# # plt.show()
+
 
 
 # labels = ['G1', 'G2', 'G3', 'G4', 'G5']

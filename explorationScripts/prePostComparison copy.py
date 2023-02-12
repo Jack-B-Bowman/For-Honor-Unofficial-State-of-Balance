@@ -39,7 +39,7 @@ pickrates = [i[2] for i in preSeasonList]
 
 y_pos = np.arange(len(names))
 
-ax.barh(y_pos, winrates, align='center', label="Last Season")
+ax.barh(y_pos, winrates, align='center', label="Post Dodge Attack Update")
 
 for i, v in enumerate(winrates):
     b = float(v)
@@ -62,7 +62,7 @@ pickrates = [i[2] for i in postSeasonList]
 
 y_pos = np.arange(len(names))
 
-ax.barh(y_pos, winrates, align='center',height=0.5, label="Current Season")
+ax.barh(y_pos, winrates, align='center',height=0.5, label="Post Valk & Tiandi Rework")
 
 for i, v in enumerate(winrates):
     b = float(v)
@@ -83,7 +83,7 @@ ax.invert_yaxis()  # labels read top-to-bottom
 ax.set_xlabel('Winrate (%)')
 ax.set_xlim(xmin=40)
 ax.set_xlim(xmax=65)
-ax.set_title('Current Vs Last Season Winrate')
+ax.set_title('Dodge Attack Update Vs Valk & Tiandi Rework')
 ax.legend()
 
 # ticks = list(range(0,10)) + list(range(30,70))

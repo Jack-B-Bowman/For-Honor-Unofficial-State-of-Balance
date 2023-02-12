@@ -107,7 +107,8 @@ def parseHeros(herosTxt):
                 "Warlord" : "Warlord" ,
                 "Warmonger" : "Warmonger" ,
                 "Zhanhu" : "Zhanhu",
-                "Medjay" : "Medjay"
+                "Medjay" : "Medjay",
+                "OutlandersH032Gazelle" : "Afeera"
     }
     heros = {}
     currentHero = ""

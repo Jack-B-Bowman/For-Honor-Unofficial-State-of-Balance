@@ -15,6 +15,7 @@ seasonStartDate = 1666137644 # crossplay phase 2
 seasonEndDate = 1666656044 # kensei hitstun+matchmaking
 seasonEndDate = 91666656044 # kensei hitstun+matchmaking
 seasonStartDate = 1666656044 # kensei hitstun+matchmaking
+seasonStartDate = 1670392861 # valk & tiandi
 # seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
