@@ -4,7 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
-import CommonDataAnalysisLib
+import CommonDataAnalysisLib as clib
 
 
 conn = sqlite3.connect("FH.db")
@@ -127,40 +127,40 @@ def getHeroWinrateAverages(activeUsers):
 datesToUse = ["NA","28 7 2022","15 9 2022","20 10 2022","3 11 2022","7 12 2022","1 1 2100"]
 listOfWinrateData = []
 
-# for i in range(len(datesToUse) - 1):
-#     print(f"getting data from {datesToUse[i]} to {datesToUse[i+1]}")
-#     seasonStartDate = dateToUnixTime(datesToUse[i])
-#     seasonEndDate = dateToUnixTime(datesToUse[i+1])
-#     sql = f"""
-#         select name,
-#             username,
-#             UTCSeconds,
-#             platform,
-#             wins,
-#             losses,
-#             timePlayed
-#         from (
-#         select name, 
-#                 username, 
-#                 UTCSeconds,
-#                 max(UTCSeconds) over (partition by username) as max_date,
-#                 min(UTCSeconds) over (partition by username) as min_date,
-#                 platform,
-#                 wins,
-#                 losses,
-#                 timePlayed
-#         from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
-#         FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
-#         )
-#         where UTCSeconds"""
-#     print("executing SQL")
-#     crsr.execute(sql)
-#     ans = crsr.fetchall()
-#     print("getting active users from data")
-#     activeUsers = getActiveUsersFromData(SQLData=ans)
-#     print("getting hero data from user data")
-#     winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
-#     listOfWinrateData.append(winrateData)
+for i in range(len(datesToUse) - 1):
+    print(f"getting data from {datesToUse[i]} to {datesToUse[i+1]}")
+    seasonStartDate = clib.dateToUnixTime(datesToUse[i])
+    seasonEndDate = clib.dateToUnixTime(datesToUse[i+1])
+    sql = f"""
+        select name,
+            username,
+            UTCSeconds,
+            platform,
+            wins,
+            losses,
+            timePlayed
+        from (
+        select name, 
+                username, 
+                UTCSeconds,
+                max(UTCSeconds) over (partition by username) as max_date,
+                min(UTCSeconds) over (partition by username) as min_date,
+                platform,
+                wins,
+                losses,
+                timePlayed
+        from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+        FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
+        )
+        where UTCSeconds"""
+    print("executing SQL")
+    crsr.execute(sql)
+    ans = crsr.fetchall()
+    print("getting active users from data")
+    activeUsers = clib.getActiveUsersFromData(SQLData=ans)
+    print("getting hero data from user data")
+    winrateData = getHeroWinrateAverages(activeUsers=activeUsers)
+    listOfWinrateData.append(winrateData)
 
 
 # file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\preComputedDatafiles\\winrateOverTime.json",'w')
