@@ -214,10 +214,10 @@ file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScrape
 json.dump(yValuesByHero,file,indent=4)
 file.close()
 
-for faction in CommonDataAnalysisLib.factionKey:
+for faction in clib.factionKey:
     fig, ax = plt.subplots()
     offset = 0
-    for hero in CommonDataAnalysisLib.factionKey[faction]:
+    for hero in clib.factionKey[faction]:
         y = yValuesByHero[hero]
         x = np.arange(len(y))
         # x = x + offset
