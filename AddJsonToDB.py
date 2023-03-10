@@ -61,10 +61,17 @@ def mergeJSON(dir,originalFilePath=""):
                                 if compareStat["time"] == stat["time"]:
                                     isNew = False
                             if isNew:
-                                numberOfActive += 1
-                                originalStats.append(stat)
-                                originalStats = sorted(originalStats,key=lambda d: d['time'])
-                                mergedData[user][platform] = originalStats
+                                try:
+                                    numberOfActive += 1
+                                    originalStats.append(stat)
+                                    originalStats = sorted(originalStats,key=lambda d: d['time'])
+                                    mergedData[user][platform] = originalStats
+                                except Exception as e:
+                                    print(e)
+                                    print(filename)
+                                    print(user)
+                                    print(platform)
+                                    print()
 
                 else:
                     # count +=1 

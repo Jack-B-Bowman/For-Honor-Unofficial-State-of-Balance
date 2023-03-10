@@ -60,6 +60,18 @@ factionKey = {
 }
 
 UpdateInfo = {
+    "9 2 2023" : {
+        "version" : "2.41.1",
+        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/6AEE3FHo1lioBl3hWjxTfO/patch-notes-2411-for-honor",
+        "notes" : "afeera initial changes"
+    },
+
+    "2 2 2023" : {
+        "version" : "2.41.0",
+        "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/2EET1EvzodsBmlPte9xuCb/patch-notes-2410-for-honor",
+        "notes" : "afeera"
+    },
+
     "7 12 2022" : {
         "version" : "2.40.0",
         "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/5K7gJrsS7BGjegCjnnZydv/patch-notes-2400-for-honor",
@@ -94,12 +106,129 @@ UpdateInfo = {
     "30 6 2022" : {
         "version" : "2.36.3",
         "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/1OBhqnANLD7C5Itm7ObLld/patch-notes-2363-for-honor",
+        "notes" : "conq nerf"
     },
     "27 4 2022" : {
         "version" : "2.35.0",
         "patchnotes" : "https://www.ubisoft.com/en-gb/game/for-honor/news-updates/5Pm3q0Ox2Ed9YRQe3Kuq1m/patch-notes-2351-for-honor",
+        "notes" : "early update"
     },
 }
+
+# this function gets the sql query that gives the hero stats closest to seasonStartDate and seasonEndDate for all players
+def sqlGetAllHeroData(seasonStartDate,seasonEndDate):
+    return f"""
+    select name,
+        username,
+        UTCSeconds,
+        platform,
+        wins,
+        losses,
+        timePlayed
+    from (
+    select name, 
+            username, 
+            UTCSeconds,
+            max(UTCSeconds) over (partition by username) as max_date,
+            min(UTCSeconds) over (partition by username) as min_date,
+            platform,
+            wins,
+            losses,
+            timePlayed
+    from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+    FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
+    )
+    where UTCSeconds"""
+
+
+website_sql_queries = {
+    "hero_data" : lambda season_start_date, season_end_date : f"""     
+                    select name,
+                        username,
+                        UTCSeconds,
+                        platform,
+                        wins,
+                        losses,
+                        timePlayed,
+                        kills,
+                        deaths,
+                        assists,
+                        from (
+                            select name, 
+                                    username, 
+                                    UTCSeconds,
+                                    max(UTCSeconds) over (partition by username) as max_date,
+                                    min(UTCSeconds) over (partition by username) as min_date,
+                                    platform,
+                                    wins,
+                                    losses,
+                                    timePlayed,
+                                    kills,
+                                    deaths,
+                                    assists,
+                            from (SELECT hero.name,hero.wins,hero.losses, hero.kills, hero.deaths, hero.assists, hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+                            FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {season_start_date} AND {season_end_date} limit 1000)
+                    )        
+    """,
+
+    "mode_data" : lambda season_start_date, season_end_date : f"""     
+                    select name,
+                        username,
+                        UTCSeconds,
+                        platform,
+                        wins,
+                        losses,
+                        timePlayed,
+                        kills,
+                        deaths,
+                        assists,
+                            from (
+                            select name, 
+                                    username, 
+                                    UTCSeconds,
+                                    max(UTCSeconds) over (partition by username) as max_date,
+                                    min(UTCSeconds) over (partition by username) as min_date,
+                                    platform,
+                                    wins,
+                                    losses,
+                                    timePlayed,
+                                    kills,
+                                    deaths,
+                                    assists,
+                            from (SELECT mode.name,mode.wins,mode.losses, mode.kills, mode.deaths, mode.assists, mode.timePlayed, stat.username, stat.platform, stat.UTCSeconds 
+                            FROM mode INNER JOIN stat on mode.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {season_start_date} AND {season_end_date} limit 1000)
+                            ) 
+    """,
+
+    "stat_data" : lambda season_start_date, season_end_date : f"""     
+                    select username,
+                        username,
+                        UTCSeconds,
+                        platform,
+                        wins,
+                        losses,
+                        timePlayed,
+                        kills,
+                        deaths,
+                        assists
+                        from (
+                        select 
+                                username, 
+                                UTCSeconds,
+                                max(UTCSeconds) over (partition by username) as max_date,
+                                min(UTCSeconds) over (partition by username) as min_date,
+                                platform,
+                                wins,
+                                losses,
+                                kills,
+                                deaths,
+                                assists,
+                                timePlayed
+                        from (SELECT * from stat WHERE stat.UTCSeconds BETWEEN {season_start_date} AND {season_end_date} limit 1000)
+                        )    
+    """,
+}
+
 
 def dateToUnixTime(date):
     dateData = date.split()
@@ -159,3 +288,4 @@ def getActiveUsersFromData(SQLData):
             }
     print()
     return activeUsers
+

@@ -2,6 +2,7 @@ import json
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
+import CommonDataAnalysisLib as cdl
 import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
@@ -13,6 +14,8 @@ seasonStartDate = 1658966400 # Medjay
 seasonStartDate = 1663248434 # dodge
 seasonStartDate = 1666137644 # crossplay phase 2
 seasonStartDate = 1666656044 # kensei hitstun+matchmaking
+
+seasonStartDate = cdl.dateToUnixTime("2 2 2023") 
 
 brokenPlayers = []
 
@@ -157,7 +160,8 @@ theMap = {
 "Warlord" : [],
 "Warmonger" : [],
 "Zhanhu" : [],
-"Medjay" : []
+"Medjay" : [],
+"Afeera" : [],
 }
 
 theMap2 = {
@@ -191,7 +195,8 @@ theMap2 = {
 "Warlord" : {"wins": 0, "losses": 0},
 "Warmonger" : {"wins": 0, "losses": 0},
 "Zhanhu" : {"wins": 0, "losses": 0},
-"Medjay" : {"wins": 0, "losses": 0}
+"Medjay" : {"wins": 0, "losses": 0},
+"Afeera" : {"wins": 0, "losses": 0},
 }
 
 # file = open("updatedUserStats04-28-2.json","r")

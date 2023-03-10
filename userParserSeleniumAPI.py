@@ -27,7 +27,7 @@ for line in usersFileLines:
     splicedUsername = " ".join(splicedUsername)
     users.append((platform,username))
 
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames.json","r")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames1231.json","r")
 downloadSchedule = json.load(file)
 file.close()
 
@@ -57,13 +57,34 @@ def downloadThread(id):
     players = {}
     data = {}
     opts = uc.ChromeOptions()
+    
     # opts.headless = True
+    # prefs = {"profile.managed_default_content_settings.images": 2}
+    # opts.add_experimental_option("prefs", prefs)
     # opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
+    opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check')
+    opts.add_argument("--load-extension=C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0")
+    # opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
     # opts.add_argument("--unsafe-pac-url")  
-
-    driver = uc.Chrome(options=opts, use_subprocess=True)
+    # uc.TARGET_VERSION  = 104
+    # driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\\Program Files\\\Google\\\Chrome\\Application\\new_chrome.exe")
+    driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    # driver.implicitly_wait(10)
+    # driver = uc.Chrome(options=opts)
+    # driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
+    # installBtn = getElements(driver,"g-c-Hf",waitTime=5)
+    # installBtn[0].click()
+    time.sleep(1)
+    driver.get("chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html")
+    time.sleep(5)
+    # add ublock settings
+    # driver.execute_script("document.evaluate('/html/body/div[2]/div/div[2]/div[6]/div[1]/div/div/div/div[5]/div[1]/pre/span/span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerHTML=arguments[0];",ublockSettings)
+    # enable button
+    # driver.execute_script("document.evaluate('/html/body/div[1]/p[2]/button[1]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.disabled=false;")
+    # Alert(driver).accept()
+    # time.sleep(10)
     # time.sleep(60)
     num = 0
     while len(users) > 0:
@@ -79,13 +100,12 @@ def downloadThread(id):
         splitUsername = username.split("%20")
         fortmattedUN = " ".join(splitUsername)
         
-        if fortmattedUN + "," + platform in downloadSchedule:
-            if time.time() > downloadSchedule[fortmattedUN + "," + platform]:
-                timeForUpdate = True
-            else:
-                timeForUpdate = False
-        else:
+        if fortmattedUN + "," + platform not in downloadSchedule:
             timeForUpdate = True
+        elif time.time() > downloadSchedule[fortmattedUN + "," + platform] - 86400 * 3:
+            timeForUpdate = True
+        else:
+            timeForUpdate = False
 
         lineString = user[0] + "," + fortmattedUN + "\n"
 
@@ -194,9 +214,11 @@ def downloadThread(id):
                 "Warlord",
                 "Warmonger",
                 "Zhanhu",
+                "Medjay",
+                "Afeera",
                 ]
 
-                modes = ["Dominion","Duel","Breach","Elimination","Skirmish"]
+                modes = ["Dominion","Duel","Breach","Elimination","Skirmish","Tribute","Ranked Duel"]
                 # player json format
                 player = {
                     "id" : 0,
@@ -246,6 +268,22 @@ def downloadThread(id):
                             "time" : 0
                         },
                         "Skirmish" : {
+                            "wins" : 0,
+                            "losses" : 0,
+                            "kills" : 0,
+                            "deaths": 0,
+                            "assists": 0,
+                            "time" : 0
+                        },
+                        "Tribute" : {
+                            "wins" : 0,
+                            "losses" : 0,
+                            "kills" : 0,
+                            "deaths": 0,
+                            "assists": 0,
+                            "time" : 0
+                        },
+                        "Ranked Duel" : {
                             "wins" : 0,
                             "losses" : 0,
                             "kills" : 0,
@@ -517,6 +555,24 @@ def downloadThread(id):
                             "assists":0
                         },
                         "Zhanhu" : {
+                            "time" : 0,
+                            "wins" : 0,
+                            "losses":0,
+                            
+                            "kills": 0,
+                            "deaths":0,
+                            "assists":0
+                        },
+                        "Medjay" : {
+                            "time" : 0,
+                            "wins" : 0,
+                            "losses":0,
+                            
+                            "kills": 0,
+                            "deaths":0,
+                            "assists":0
+                        },
+                        "Afeera" : {
                             "time" : 0,
                             "wins" : 0,
                             "losses":0,
@@ -934,7 +990,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(180)
+    # time.sleep(180)
 
 for item in threads:
     item.join()

@@ -4,7 +4,7 @@ import random
 import sys
 import threading
 import sqlite3
-import undetected_chromedriver.v2 as uc
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -33,7 +33,7 @@ tracker.gg##body:style(overflow:auto!important)
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 4
+    arg = 6
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -65,7 +65,8 @@ random.shuffle(users)
 id = 0
 
 xpaths = {
-    "overview" : "/html/body/div/div[2]/div[3]/div/main/div[3]/div[3]/div[2]/div/div[1]",
+    # "overview" : "/html/body/div/div[2]/div[3]/div/main/div[3]/div[3]/div[2]/div/div[1]",
+    "overview" : "/html/body/div[1]/div[3]/div[3]/div/main/div[3]/div[1]/div[3]/ul/li[1]/a",
     "heroes" : "/html/body/div/div[2]/div[3]/div/main/div[3]/div[3]/div[2]/div",
     "modes" : "/html/body/div/div[2]/div[3]/div/main/div[3]/div[3]/div[2]/div",
     "heroesFactionDropdown" : "/html/body/div/div[2]/div[3]/div/main/div[3]/div[3]/div[2]/div/div[1]/div[2]/div",
@@ -165,14 +166,23 @@ def getElementByCSS(driver,CSS,waitTime=0):
     return element
 
 def getURL(driver,url):
-        driver.get(url)
-        try:
-            WebDriverWait(driver,10).until(EC.any_of(
-            EC.presence_of_element_located((By.CLASS_NAME,"content--error")),
-            EC.presence_of_element_located((By.CLASS_NAME,"trn-ign__username")),
-            EC.presence_of_element_located((By.CLASS_NAME,"captcha-prompt"))))
-        except:
-            getURL(driver,url)
+    driver.get(url)
+    try:
+        WebDriverWait(driver,10).until(EC.any_of(
+        EC.presence_of_element_located((By.CLASS_NAME,"content--error")),
+        EC.presence_of_element_located((By.CLASS_NAME,"trn-ign__username")),
+        EC.presence_of_element_located((By.CLASS_NAME,"captcha-prompt")),
+        EC.presence_of_element_located((By.CLASS_NAME,"pow-button"))
+        ))
+        
+    except:
+        getURL(driver,url)
+
+    while len(getElementsByClass(driver,"pow-button")) != 0:
+        button = getElementsByClass(driver,"pow-button")
+        button[0].click()
+        time.sleep(1)
+        getURL(driver,url)
 
 def downloadThread(id):
     players = {}
@@ -189,21 +199,21 @@ def downloadThread(id):
     # opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
     # opts.add_argument("--unsafe-pac-url")  
     # uc.TARGET_VERSION  = 104
-    # driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\\Program Files\\\Google\\\Chrome\\Application\\new_chrome.exe")
-    driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    # driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    driver = uc.Chrome(options=opts)
     # driver.implicitly_wait(10)
     # driver = uc.Chrome(options=opts)
     # driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
     # installBtn = getElements(driver,"g-c-Hf",waitTime=5)
     # installBtn[0].click()
-    time.sleep(1)
-    driver.get("chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html")
-    time.sleep(1)
-    UblockTabs = getElementsByClass(driver,"tabButton",5)
-    UblockTabs[2].click()
-    frame =  WebDriverWait(driver, timeout=5).until(lambda d: d.find_element(by=By.ID,value="iframe"))
-    driver.switch_to.frame(frame)
-    lines = getElementsByClass(driver,"CodeMirror-line",5)
+    # time.sleep(1)
+    # driver.get("chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html")
+    # time.sleep(5)
+    # UblockTabs = getElementsByClass(driver,"tabButton",5)
+    # UblockTabs[2].click()
+    # frame =  WebDriverWait(driver, timeout=5).until(lambda d: d.find_element(by=By.ID,value="iframe"))
+    # driver.switch_to.frame(frame)
+    # lines = getElementsByClass(driver,"CodeMirror-line",5)
     # add ublock settings
     # driver.execute_script("document.evaluate('/html/body/div[2]/div/div[2]/div[6]/div[1]/div/div/div/div[5]/div[1]/pre/span/span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerHTML=arguments[0];",ublockSettings)
     # enable button
@@ -244,7 +254,7 @@ def downloadThread(id):
                 url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
                 driver.get(url)
                 # print(url)
-        
+         
                 tabs = []
                 # wait for 404 or tabs to show
                 driver.find_elements(By.CLASS_NAME,"trn-ign__username")
@@ -253,10 +263,20 @@ def downloadThread(id):
                     WebDriverWait(driver,10).until(EC.any_of(
                     EC.presence_of_element_located((By.CLASS_NAME,"content--error")),
                     EC.presence_of_element_located((By.CLASS_NAME,"trn-ign__username")),
-                    EC.presence_of_element_located((By.CLASS_NAME,"captcha-prompt"))))
+                    EC.presence_of_element_located((By.CLASS_NAME,"captcha-prompt")),
+                    EC.presence_of_element_located((By.CLASS_NAME,"pow-button"))
+                    ))
                     
                 except:
+                    ...
+                    # getURL(driver,url)
+
+                while len(getElementsByClass(driver,"pow-button")) != 0:
+                    button = getElementsByClass(driver,"pow-button")
+                    button[0].click()
+                    time.sleep(5)
                     getURL(driver,url)
+
 
                 while len(getElementsByClass(driver,"captcha-prompt")) != 0:
                     getURL(driver,url)
@@ -271,15 +291,15 @@ def downloadThread(id):
                     tabs = getElementsByClass(driver,"trn-tabs__item")
                     # get overview
                     overviewText = ""
-                    if waitOnElementByXpath(driver,5,xpaths["overview"]):
-                        overviewText = getElementByXpath(driver,xpaths["overview"],1).text
+                    tabs[0].click()
                     
+                    overviewText = getElementByCSS(driver,"div[data-v-6d4a4dfc][data-v-6d4a4dfc]",5).text
                     # get heroes
                     tabs[1].click()
                     # driver.get(url + "/heroes")
                     heroText = ""
                     heroText = getElementByCSS(driver,'div[data-v-7dcd1550][data-v-1bdd88b8]',5).text
-                    
+
                     # get modes
                     tabs[2].click()
                     # driver.get(url + "/modes")
