@@ -1,8 +1,54 @@
 import re
 import time
 
+heroNames = {
+                "Aramusha" : "Aramusha" ,
+                "Berserker" : "Berserker" ,
+                "Black Prior" : "Black Prior" ,
+                "Centurion" : "Centurion"  ,
+                "Conqueror" : "Conqueror" ,
+                "Gladiator" : "Gladiator" ,
+                "Gryphon" : "Gryphon" ,
+                "Highlander" : "Highlander" ,
+                "Hitokiri" : "Hitokiri" ,
+                "Jiang Jun" : "Jiang Jun" ,
+                "Jormungandr" : "Jormungandr" ,
+                "Kensei" : "Kensei" ,
+                "Kyoshin" : "Kyoshin" ,
+                "Lawbringer" : "Lawbringer" ,
+                "Nobushi" : "Nobushi" ,
+                "Nuxia" : "Nuxia" ,
+                "Orochi" : "Orochi" ,
+                "Peacekeeper" : "Peacekeeper" ,
+                "Pirate" : "Pirate" ,
+                "Raider" : "Raider" ,
+                "Shaman" : "Shaman" ,
+                "Shaolin" : "Shaolin" ,
+                "Shinobi" : "Shinobi" ,
+                "Shugoki" : "Shugoki" ,
+                "Tiandi" : "Tiandi" ,
+                "Valkyrie" : "Valkyrie" ,
+                "Warden" : "Warden" ,
+                "Warlord" : "Warlord" ,
+                "Warmonger" : "Warmonger" ,
+                "Zhanhu" : "Zhanhu",
+                "Medjay" : "Medjay",
+                "OutlandersH032Gazelle" : "Afeera",
+                "Afeera" : "Afeera"
+    }
+
+modeNames = {
+        "Dominion" : "Dominion" ,
+        "Duel" : "Duel",
+        "Breach" : "Breach",
+        "Elimination" : "Elimination" ,
+        "Skirmish" : "Skirmish",
+        "Tribute" : "Tribute" ,
+        "Ranked Duel" : "Ranked Duel",
+    }
+
 def constructUserCheckHashmap():
-    userFile = open("compiledUsers-12-04-1.csv","r")
+    userFile = open("usersTesting03-15-1.txt","r")
     usersFileLines = userFile.readlines()
     userFile.close()
     userCheckHashmap = {}
@@ -108,7 +154,8 @@ def parseHeros(herosTxt):
                 "Warmonger" : "Warmonger" ,
                 "Zhanhu" : "Zhanhu",
                 "Medjay" : "Medjay",
-                "OutlandersH032Gazelle" : "Afeera"
+                "OutlandersH032Gazelle" : "Afeera",
+                "Afeera" : "Afeera"
     }
     heros = {}
     currentHero = ""

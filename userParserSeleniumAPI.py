@@ -3,9 +3,12 @@ import time
 import random
 import sys
 import threading
-import sqlite3
-import undetected_chromedriver.v2 as uc
+from CommonSeleniumScraperFunctions import modeNames
+from CommonSeleniumScraperFunctions import heroNames
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 mutex = threading.Lock()
 
 arg = 0
@@ -14,10 +17,13 @@ if len(sys.argv) < 2:
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("compiledUsers-12-04-1.csv","r")
+userFile = open("usersTesting03-15-1.txt","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
+threads = []
+threadData = {}
+
 
 for line in usersFileLines:
     splitLine = line.split(",")
@@ -44,6 +50,21 @@ failedUsersDict = {}
 for user in nonExistantUsersList:
     failedUsersDict[user] = True
 
+def progThread(id):
+    totalUsers = len(users)
+    while(len(users) > 0):
+
+        display = ""
+
+        progress = 100 - ((len(users) / totalUsers) * 100)
+
+        for thread in threadData:
+            display += f"{thread} : ΔT = {threadData[thread]['time']:.2f} \t"
+
+        display += f"{progress:.2f}%"
+        print(f"\r{display}",end="")
+        time.sleep(1)
+
 def checkIntegrety(username,platform,data):
     if data['platformInfo']['platformUserHandle'] != username:
         return False
@@ -51,9 +72,105 @@ def checkIntegrety(username,platform,data):
         return False
     return True
 
+# username should not be in the url-coded (%20) form
+def isDownloadUser(username,platform,download_schedule,failed_users):
+    TIME_OFFSET = 86000 * 3
+    user_hash = username + "," + platform
+
+    if user_hash in failed_users:
+        return False
+
+    if user_hash not in download_schedule:
+        return True
+
+    if time.time() > download_schedule[user_hash]:
+        return True
+    
+    return False
+
+def getUser(driver,url):
+            driver.get(url)
+            time.sleep(1)
+            try:
+                WebDriverWait(driver,10).until(
+                EC.presence_of_element_located((By.TAG_NAME,"pre"))
+                )
+                return json.loads(driver.find_element(by=By.TAG_NAME,value="pre").text)
+            except Exception as e:
+                return getUser(driver, url)
+
+def parseSegments(stats,segments):
+    for item in segments:
+        # if the current item in segments is a hero and that hero exists. OutlandersH030PirateQueen is the pirate and SamuraiH029Faceless is kyoshin
+        if item["type"] == "hero" and (item["metadata"]["name"] in heroNames or item["metadata"]["name"] == "OutlandersH030PirateQueen" or item["metadata"]["name"] == "SamuraiH029Faceless"):
+            name = item["metadata"]["name"]
+            if name == "OutlandersH030PirateQueen": name = "Pirate"
+            if name == "SamuraiH029Faceless": name = "Kyoshin"
+            name = heroNames[name]
+            heroStats = item["stats"]
+            stats["heros"][name]["wins"] = heroStats["wins"]["value"]
+            stats["heros"][name]["losses"] = heroStats["losses"]["value"]
+            stats["heros"][name]["kills"] = heroStats["killsP"]["value"]
+            stats["heros"][name]["deaths"] = heroStats["deathsP"]["value"]
+            stats["heros"][name]["assists"] = heroStats["assistsP"]["value"]
+            stats["heros"][name]["time"] = heroStats["timePlayed"]["value"]
+        
+        # this section contains the user's global stats
+        if item["type"] == "gameType":
+            if item["metadata"]["name"] == "Player vs. Player Overview":
+                globalStats = item["stats"]
+                stats["reputation"] = globalStats["reputation"]["value"]
+                stats["kills"] = globalStats["killsP"]["value"]
+                stats["deaths"] = globalStats["deathsP"]["value"]
+                stats["assists"] = globalStats["assistsP"]["value"]
+                stats["wins"] = globalStats["wins"]["value"]
+                stats["losses"] = globalStats["losses"]["value"]
+                stats["time"] = globalStats["timePlayed"]["value"]
+                stats["date"] = time.time()
+
+        # this section contains the gamemode stats
+        if item["metadata"]["name"] in modeNames:
+                mode = item["metadata"]["name"]
+                modeStats = item["stats"]
+                stats["modes"][mode]["wins"]   = modeStats["wins"]["value"]
+                stats["modes"][mode]["losses"] = modeStats["losses"]["value"]
+                stats["modes"][mode]["kills"]  = modeStats["killsP"]["value"]
+                stats["modes"][mode]["deaths"] = modeStats["deathsP"]["value"]
+                stats["modes"][mode]["assists"]= modeStats["assistsP"]["value"]
+                stats["modes"][mode]["time"]   = modeStats["timePlayed"]["value"]
+
+        
+    return stats
+
+def handleErrors(username,platform,data):
+    error_message = data["errors"][0]["code"]
+    if error_message == "CollectorResultStatus::NotFound":
+        mutex.acquire()
+        failedUsersFile = open("failedUsers.csv","a")
+        failedUsersFile.write(platform + "," + username + "\n")
+        failedUsersFile.close()
+        mutex.release()
+        return False
+
+    mutex.acquire()
+    file = open("errors.json","r")
+    errors = json.load(file)
+    file.close()
+    mutex.release()
+
+    if error_message not in errors:
+        errors[error_message] = 0
+    
+    errors[error_message] += 1
+
+    mutex.acquire()
+    file = open("errors.json","w")
+    errors = json.dump(errors,file,indent=4)
+    file.close()
+    mutex.release()
+    return False
+
 def downloadThread(id):
-    conn = sqlite3.connect("FH.db")
-    crsr = conn.cursor()
     players = {}
     data = {}
     opts = uc.ChromeOptions()
@@ -70,15 +187,15 @@ def downloadThread(id):
     # opts.add_argument("--unsafe-pac-url")  
     # uc.TARGET_VERSION  = 104
     # driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\\Program Files\\\Google\\\Chrome\\Application\\new_chrome.exe")
-    driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    driver = uc.Chrome(options=opts)
     # driver.implicitly_wait(10)
     # driver = uc.Chrome(options=opts)
     # driver.get("https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm?hl=en")
     # installBtn = getElements(driver,"g-c-Hf",waitTime=5)
     # installBtn[0].click()
     time.sleep(1)
-    driver.get("chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html")
-    time.sleep(5)
+    # driver.get("chrome-extension://cjpalhdlnbpafiamejdnhcphjbkeiagm/dashboard.html#1p-filters.html")
+    # time.sleep(5)
     # add ublock settings
     # driver.execute_script("document.evaluate('/html/body/div[2]/div/div[2]/div[6]/div[1]/div/div/div/div[5]/div[1]/pre/span/span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerHTML=arguments[0];",ublockSettings)
     # enable button
@@ -86,897 +203,63 @@ def downloadThread(id):
     # Alert(driver).accept()
     # time.sleep(10)
     # time.sleep(60)
-    num = 0
+    num = 1
     while len(users) > 0:
         mutex.acquire()
-        user = users.pop()
+        user = users.pop(0)
         mutex.release()
 
-        skipUser = False
-        timeForUpdate = False
         platform = user[0]
         username = user[1]
 
-        splitUsername = username.split("%20")
-        fortmattedUN = " ".join(splitUsername)
-        
-        if fortmattedUN + "," + platform not in downloadSchedule:
-            timeForUpdate = True
-        elif time.time() > downloadSchedule[fortmattedUN + "," + platform] - 86400 * 3:
-            timeForUpdate = True
-        else:
-            timeForUpdate = False
+        url_name = username
 
-        lineString = user[0] + "," + fortmattedUN + "\n"
-
-        url = ""
-        html_data = ""
-        if lineString not in failedUsersDict and timeForUpdate:
-            # catches any errors and skips the user if they gave an error. (this section would throw an error every thousand users or so)
-            try:
-                url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{username}?{num % 10}'
-                # url = f'https://tracker.gg/for-honor/profile/{platform}/{username}/pvp'
-                print(url)
-                # https://api.tracker.gg/api/v1/for-honor/search/by-query/vincent_van_goy"
-                try:
-                    driver.get(url)
-                except:
-                    time.sleep(10)
-                    driver.get(url)
-                time.sleep(1)
-                num += 1
-                pre = driver.find_element(by=By.TAG_NAME,value="pre").text
-                print(pre)
-                html_data = json.loads(pre)
-                if 'errors' in html_data:
-                    mutex.acquire()
-                    failedUsersFile = open(".\\failedUsers.csv","a")
-                    failedUsersFile.write(platform + "," + username + "\n")
-                    failedUsersFile.close()
-                    mutex.release()
-                else:
-                    data = html_data['data']
-                    splitUsername = username.split("%20")
-                    TempUsername = " ".join(splitUsername)
-                    assert checkIntegrety(TempUsername,platform,data)
-
-            except Exception as e:
-                print("GET error:\n", e)
-                # failedUsersFile = open("failedUsers.csv","a")F
-                # failedUsersFile.write(platform + "," + username + "," + str(e))
-                # failedUsersFile.close()
-                skipUser = True
-                time.sleep(120)
-        else:
-            skipUser = True
-        
-
-
-        # the stat tracker replaces spaces in the url with "%20" but the initial state json uses spaces when referencing the username
-        # this simply reconstructs the actual username
         splitUsername = username.split("%20")
         username = " ".join(splitUsername)
 
-        
+        if isDownloadUser(username,platform,downloadSchedule,failedUsersDict):
 
-        # mutex.acquire()
-        if timeForUpdate and not skipUser:
-            print(f"ThreadID : {id}\n  count : {str(num+1)} \n  user : {username}") # current user
-        # mutex.release()
-        if skipUser and lineString not in failedUsersDict and timeForUpdate:
-                errorLog = open(f".\\errorLog-{id}.html","a")
-                errorLog.write(driver.find_element(by=By.TAG_NAME,value="body").text)
-                errorLog.close()
-        # provided all of the above went well
-        if not skipUser:
+            url = f'https://api.tracker.gg/api/v2/for-honor/standard/profile/{platform}/{url_name}?{num}'
+            # url = "https://api.tracker.gg/api/v2/for-honor/standard/profile/xbl/Poor%20yves?1"
+            data = getUser(driver,url)
 
-            lowerCaseUN = username.lower()
-            try:
-                faction = data["metadata"]["factionKey"]
-            except:
-                skipUser = True 
-            
-            if skipUser and lineString not in failedUsersDict and timeForUpdate:
-                    errorLog = open(f".\\errorLog-{id}.html","a")
-                    errorLog.write(driver.find_element(by=By.TAG_NAME,value="body").text)
-                    errorLog.close()
+            if "errors" in data:
+                retry = handleErrors(username,platform,data)
+                if retry:
+                    mutex.acquire()
+                    users.append((platform,url_name))
+                    mutex.release()
 
-            if not skipUser:
-                # list of heros
-                heros = [
-                "Aramusha",
-                "Berserker",
-                "Black Prior",
-                "Centurion",
-                "Conqueror",
-                "Gladiator",
-                "Gryphon",
-                "Highlander",
-                "Hitokiri",
-                "Jiang Jun",
-                "Jormungandr",
-                "Kensei",
-                "Kyoshin",
-                "Lawbringer",
-                "Nobushi",
-                "Nuxia",
-                "Orochi",
-                "Peacekeeper",
-                "Pirate",
-                "Raider",
-                "Shaman",
-                "Shaolin",
-                "Shinobi",
-                "Shugoki",
-                "Tiandi",
-                "Valkyrie",
-                "Warden",
-                "Warlord",
-                "Warmonger",
-                "Zhanhu",
-                "Medjay",
-                "Afeera",
-                ]
-
-                modes = ["Dominion","Duel","Breach","Elimination","Skirmish","Tribute","Ranked Duel"]
-                # player json format
-                player = {
-                    "id" : 0,
-                    "platform" : "",
-                    "username" : "",
-                    "faction" : "",
-                    "reputation" : 0,
-                    "kills" : 0,
-                    "deaths": 0,
-                    "assists" : 0,
-                    "wins" : 0,
-                    "losses": 0,
-                    "time" : 0,
-                    "date" : time.time(),
-
-                    "modes" : {
-                        "Dominion" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Duel" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Breach" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Elimination" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Skirmish" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Tribute" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        },
-                        "Ranked Duel" : {
-                            "wins" : 0,
-                            "losses" : 0,
-                            "kills" : 0,
-                            "deaths": 0,
-                            "assists": 0,
-                            "time" : 0
-                        }
-                    },
-                    "heros" : {
-                        "Aramusha" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Berserker" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Black Prior" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Centurion" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Conqueror" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Gladiator" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Gryphon" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Highlander" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Hitokiri" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Jiang Jun" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Jormungandr" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Kensei" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Kyoshin" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Lawbringer" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Nobushi" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Nuxia" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Orochi" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Peacekeeper" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Pirate" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Raider" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Shaman" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Shaolin" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Shinobi" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Shugoki" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Tiandi" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Valkyrie" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Warden" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Warlord" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Warmonger" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Zhanhu" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Medjay" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                        "Afeera" : {
-                            "time" : 0,
-                            "wins" : 0,
-                            "losses":0,
-                            
-                            "kills": 0,
-                            "deaths":0,
-                            "assists":0
-                        },
-                    }
-
-                }
-                
-                stats = { # each stats has the date (in seconds since epoch) along with the player's rep time played and PVP stats
+            if "data" in data:
+                # each stats has the date (in seconds since epoch) along with the player's rep time played and PVP stats
                 # these include total kills, deaths, assists, wins, and losses. As well as kills, deaths, assists, wins, and losses by mode
                 # they also include kills, deaths, assists, wins, losses, and time played for each hero. I use time played as a substitute for rep.
                 # these stats do not include K/D/A/W/L for each hero per mode. I cannot say for sure that player "A" has a 63% winrate in dominion as Berserker.
                 # this kind of stat could be approximated by using players that play almost exclusivly that mode though
-                "date" : 0,
-                "platform" : "",
-                "faction" : "",
-                "reputation" : 0,
-                "kills" : 0,
-                "deaths": 0,
-                "assists" : 0,
-                "wins" : 0,
-                "losses": 0,
-                "time" : 0,
-                "modes" : {
-                    "Dominion" : {
-                        "wins" : 0,
-                        "losses" : 0,
-                        "kills" : 0,
-                        "deaths": 0,
-                        "assists": 0,
-                        "time" : 0
-                    },
-                    "Duel" : {
-                        "wins" : 0,
-                        "losses" : 0,
-                        "kills" : 0,
-                        "deaths": 0,
-                        "assists": 0,
-                        "time" : 0
-                    },
-                    "Breach" : {
-                        "wins" : 0,
-                        "losses" : 0,
-                        "kills" : 0,
-                        "deaths": 0,
-                        "assists": 0,
-                        "time" : 0
-                    },
-                    "Elimination" : {
-                        "wins" : 0,
-                        "losses" : 0,
-                        "kills" : 0,
-                        "deaths": 0,
-                        "assists": 0,
-                        "time" : 0
-                    },
-                    "Skirmish" : {
-                        "wins" : 0,
-                        "losses" : 0,
-                        "kills" : 0,
-                        "deaths": 0,
-                        "assists": 0,
-                        "time" : 0
-                    }
-                },
-                "heros" : {
-                    "Aramusha" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Berserker" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Black Prior" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Centurion" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Conqueror" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Gladiator" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Gryphon" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Highlander" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Hitokiri" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Jiang Jun" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Jormungandr" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Kensei" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Kyoshin" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Lawbringer" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Nobushi" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Nuxia" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Orochi" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Peacekeeper" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Pirate" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Raider" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Shaman" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Shaolin" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Shinobi" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Shugoki" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Tiandi" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Valkyrie" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Warden" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Warlord" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Warmonger" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                    "Zhanhu" : {
-                        "time" : 0,
-                        "wins" : 0,
-                        "losses":0,
-                        
-                        "kills": 0,
-                        "deaths":0,
-                        "assists":0
-                    },
-                }
-        }
-    
-                # player["id"] = id
-                # id += 1
+                mutex.acquire()
+                file = open("stat_format.json","r")
+                stats = json.load(file)
+                file.close()
+                mutex.release()
+                
                 players[username] = {
                 "psn" : [],
                 "xbl" : [],
                 "uplay" : []
                 }
+                stats = parseSegments(stats,data["data"]["segments"])
                 stats["platform"] = platform
-                stats["faction"] = faction
-
-                # "segments" is about 1MB of json. it contains all the importand info that I want and a metric ton of data that i don't
-                segments = data["segments"]
-                for item in segments:
-                    # if the current item in segments is a hero and that hero exists. OutlandersH030PirateQueen is the pirate and SamuraiH029Faceless is kyoshin
-                    if item["type"] == "hero" and (item["metadata"]["name"] in heros or item["metadata"]["name"] == "OutlandersH030PirateQueen" or item["metadata"]["name"] == "SamuraiH029Faceless"):
-                        name = item["metadata"]["name"]
-                        if name == "OutlandersH030PirateQueen": name = "Pirate"
-                        if name == "SamuraiH029Faceless": name = "Kyoshin"
-                        heroStats = item["stats"]
-                        stats["heros"][name]["wins"] = heroStats["wins"]["value"]
-                        stats["heros"][name]["losses"] = heroStats["losses"]["value"]
-                        stats["heros"][name]["kills"] = heroStats["killsP"]["value"]
-                        stats["heros"][name]["deaths"] = heroStats["deathsP"]["value"]
-                        stats["heros"][name]["assists"] = heroStats["assistsP"]["value"]
-                        stats["heros"][name]["time"] = heroStats["timePlayed"]["value"]
-                    
-                    # this section contains the user's global stats
-                    if item["type"] == "gameType":
-                        if item["metadata"]["name"] == "Player vs. Player Overview":
-                            globalStats = item["stats"]
-                            stats["reputation"] = globalStats["reputation"]["value"]
-                            stats["kills"] = globalStats["killsP"]["value"]
-                            stats["deaths"] = globalStats["deathsP"]["value"]
-                            stats["assists"] = globalStats["assistsP"]["value"]
-                            stats["wins"] = globalStats["wins"]["value"]
-                            stats["losses"] = globalStats["losses"]["value"]
-                            stats["time"] = globalStats["timePlayed"]["value"]
-                            stats["date"] = time.time()
-
-                    # this section contains the gamemode stats
-                    if item["metadata"]["name"] in modes:
-                            mode = item["metadata"]["name"]
-                            modeStats = item["stats"]
-                            stats["modes"][mode]["wins"]   = modeStats["wins"]["value"]
-                            stats["modes"][mode]["losses"] = modeStats["losses"]["value"]
-                            stats["modes"][mode]["kills"]  = modeStats["killsP"]["value"]
-                            stats["modes"][mode]["deaths"] = modeStats["deathsP"]["value"]
-                            stats["modes"][mode]["assists"]= modeStats["assistsP"]["value"]
-                            stats["modes"][mode]["time"]   = modeStats["timePlayed"]["value"]
-                
-                # num += 1
-                
+                stats["faction"] = data["data"]["metadata"]["factionKey"]
                 players[username][platform].append(stats)
-                stats = {}
-                # every 100 players write them to a file. this was to backup the data incase of a crash. I am not very good at this but it does save memory i think
-                if(num % 50 == 0):
-                    dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
-                    dataFile.write(json.dumps(players))
-                    dataFile.close() 
-                    players = {}
-                    # time.sleep(20)
+
+                num += 1
+        if(num % 50 == 0):
+            dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
+            dataFile.write(json.dumps(players))
+            dataFile.close() 
+            players = {}
+            # time.sleep(20)
+
 
     dataFile = open(f".\\datafiles\\dataFinal-{id}.json","a")
     dataFile.write(json.dumps(players))
@@ -985,7 +268,10 @@ def downloadThread(id):
 
 number = len(users)
 
-threads = []
+gui = threading.Thread(target=progThread, args=[99])
+gui.start()
+threads.append(gui)
+
 for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()

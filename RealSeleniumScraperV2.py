@@ -37,7 +37,7 @@ if len(sys.argv) < 2:
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("compiledUsers-12-04-1.csv","r")
+userFile = open("usersTesting03-15-1.txt","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
@@ -239,7 +239,7 @@ def downloadThread(id):
             
             if fortmattedUN + "," + platform not in downloadSchedule:
                 timeForUpdate = True
-            elif time.time() > downloadSchedule[fortmattedUN + "," + platform] - 86400 * 3:
+            elif time.time() > downloadSchedule[fortmattedUN + "," + platform] - 86400 * 5:
                 timeForUpdate = True
             else:
                 timeForUpdate = False

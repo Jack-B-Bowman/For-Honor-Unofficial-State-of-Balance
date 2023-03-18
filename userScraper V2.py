@@ -2,8 +2,11 @@ import json
 import time
 import sys
 import threading
-import undetected_chromedriver.v2 as uc
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+
 mutex = threading.Lock()
 
 arg = 0
@@ -35,10 +38,11 @@ def downloadThread(id):
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
 
-    driver = uc.Chrome(options=opts, use_subprocess=True, driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
+    driver = uc.Chrome(options=opts)
 
     timeToStop = False
-    skip = 380500
+    # skip = 380500
+    skip = 161300
     cutoffCounter = 0
     while not timeToStop:
         cutoffCounter += 1
@@ -47,11 +51,18 @@ def downloadThread(id):
         driver.get(url)
         time.sleep(1)
         try:
+            WebDriverWait(driver,10).until(
+            EC.presence_of_element_located((By.TAG_NAME,"pre"))
+            )
             data = json.loads(driver.find_element(by=By.TAG_NAME,value="pre").text)["data"]["items"]
-        except:
-            time.sleep(4)
+        except Exception as e:
+            print(e)
+            time.sleep(10)
             driver.get(url)
             time.sleep(1)
+            WebDriverWait(driver,10).until(
+            EC.presence_of_element_located((By.TAG_NAME,"pre"))
+            )
             data = json.loads(driver.find_element(by=By.TAG_NAME,value="pre").text)["data"]["items"]
 
         # print(1)
@@ -68,7 +79,7 @@ def downloadThread(id):
 
         skip += 100
         print(f"users scraped = {skip}")
-        file = open("usersTesting12-03-1.txt","a")
+        file = open("usersTesting03-15-1.txt","a")
         for user in playerList:
             try:
                 file.write(user[0] + "," + user[1] + "\n")
