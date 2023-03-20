@@ -1,10 +1,13 @@
 import matplotlib.pyplot as plt
-import numpy as np
+import CommonDataAnalysisLib as cdl
 import sqlite3
 import json
 from datetime import datetime
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
+
+seasonStartDate = cdl.dateToUnixTime("2 2 2023") 
+seasonEndDate   = cdl.dateToUnixTime("16 3 2023")
 
 sql = f"""
     select * from 
@@ -40,7 +43,7 @@ sql = f"""
     username,platform,UTCSeconds,
     min(UTCSeconds) over (PARTITION by username) as min_date from hero
     INNER JOIN stat
-    WHERE hero.playerID=stat.playerID and stat.UTCSeconds > 1670392861 ) minValues
+    WHERE hero.playerID=stat.playerID and stat.UTCSeconds  BETWEEN {seasonStartDate} AND {seasonEndDate}  ) minValues
     WHERE UTCSeconds=min_date) minValues
 
     WHERE maxValues.name=minValues.name and maxValues.username=minValues.username and maxValues.platform=minValues.platform)
@@ -105,6 +108,7 @@ formatStuff = {
     "Outlanders" : {
         "Pirate" : colours[9],
         "Medjay" : colours[8],
+        "Afeera" : colours[7],
     }
 }
 
@@ -140,6 +144,7 @@ theMap = {
 "Warmonger" : [],
 "Zhanhu" : [],
 "Medjay" : [],
+"Afeera" : [],
 }
 
 bucketSize = 5
@@ -176,7 +181,7 @@ for faction in formatStuff:
         y = []
         for i in range(len(theMap[hero])):
             if skillBucketsMatchCount[i] > 0:
-                if (i * bucketSize) > 33 and (i * bucketSize) < 82:
+                if (i * bucketSize) > 33 and (i * bucketSize) < 75:
                     x.append(i * bucketSize)
                     count = skillBucketsMatchCount[i]
                     heroMatches = theMap[hero][i]
@@ -184,7 +189,7 @@ for faction in formatStuff:
         plt.plot(x,y, color=factionHeros[hero],label=hero)
     plt.xlabel('Player Winrate (%)', fontsize=15)
     plt.ylabel('Pickrate (%)', fontsize=15)
-    plt.ylim(bottom=0, top=10)
+    plt.ylim(bottom=0, top=20)
     dateString = datetime.now().strftime("%Y-%m-%d_%H.%M.%S")
     plt.title(f"{faction} Pickrate by Skill Bracket")
     plt.legend()

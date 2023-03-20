@@ -16,6 +16,8 @@ seasonStartDate = 1666137644 # crossplay phase 2
 seasonStartDate = 1666656044 # kensei hitstun+matchmaking
 
 seasonStartDate = cdl.dateToUnixTime("2 2 2023") 
+seasonEndDate   = cdl.dateToUnixTime("16 3 2023")
+
 
 brokenPlayers = []
 
@@ -37,7 +39,7 @@ from (
          wins,
          losses,
 		 timePlayed
-  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds > {seasonStartDate} )
+  from (SELECT hero.name,hero.wins,hero.losses,hero.timePlayed, stat.username, stat.platform, stat.UTCSeconds FROM hero INNER JOIN stat on hero.playerID = stat.playerID WHERE stat.UTCSeconds BETWEEN {seasonStartDate} AND {seasonEndDate} )
 )
 where UTCSeconds = max_date OR UTCSeconds = min_date;
 """

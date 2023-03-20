@@ -43,12 +43,15 @@ random.shuffle(users)
 
 id = 0
 
-
+"""
+undefined 
+H2
+"""
 nonExistantUsersFile = open(".\\failedUsers.csv","r")
 nonExistantUsersList = nonExistantUsersFile.readlines()
 failedUsersDict = {}
 for user in nonExistantUsersList:
-    failedUsersDict[user] = True
+    failedUsersDict[user[0:-1]] = True
 
 def progThread(id):
     totalUsers = len(users)
@@ -75,15 +78,16 @@ def checkIntegrety(username,platform,data):
 # username should not be in the url-coded (%20) form
 def isDownloadUser(username,platform,download_schedule,failed_users):
     TIME_OFFSET = 86000 * 3
-    user_hash = username + "," + platform
+    user_hash_schedule = username + "," + platform
+    user_hash_failed = platform + "," + username
 
-    if user_hash in failed_users:
+    if user_hash_failed in failed_users:
         return False
 
-    if user_hash not in download_schedule:
+    if user_hash_schedule not in download_schedule:
         return True
 
-    if time.time() > download_schedule[user_hash]:
+    if time.time() > download_schedule[user_hash_schedule]:
         return True
     
     return False
@@ -152,6 +156,10 @@ def handleErrors(username,platform,data):
         mutex.release()
         return False
 
+    if error_message == "CollectorResultStatus::ExternalError":
+        time.sleep(120)
+        return True
+    
     mutex.acquire()
     file = open("errors.json","r")
     errors = json.load(file)
@@ -182,7 +190,7 @@ def downloadThread(id):
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check')
-    opts.add_argument("--load-extension=C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0")
+    # opts.add_argument("--load-extension=C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0")
     # opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
     # opts.add_argument("--unsafe-pac-url")  
     # uc.TARGET_VERSION  = 104
@@ -253,12 +261,12 @@ def downloadThread(id):
                 players[username][platform].append(stats)
 
                 num += 1
-        if(num % 50 == 0):
-            dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
-            dataFile.write(json.dumps(players))
-            dataFile.close() 
-            players = {}
-            # time.sleep(20)
+                if(num % 50 == 0):
+                    dataFile = open(f".\\datafiles\\data{str(id)}-{str(num)}.json","a")
+                    json.dump(players,dataFile)
+                    dataFile.close() 
+                    players = {}
+                    # time.sleep(20)
 
 
     dataFile = open(f".\\datafiles\\dataFinal-{id}.json","a")
@@ -276,7 +284,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    # time.sleep(180)
+    time.sleep(10)
 
 for item in threads:
     item.join()
