@@ -16,7 +16,8 @@ seasonStartDate = 1666137644 # crossplay phase 2
 seasonStartDate = 1666656044 # kensei hitstun+matchmaking
 
 seasonStartDate = cdl.dateToUnixTime("2 2 2023") 
-seasonEndDate   = cdl.dateToUnixTime("16 3 2023")
+seasonStartDate   = cdl.dateToUnixTime("16 3 2023")
+seasonEndDate   = cdl.dateToUnixTime("16 3 2024")
 
 
 brokenPlayers = []

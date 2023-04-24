@@ -13,11 +13,11 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 1
+    arg = 2
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("usersTesting03-15-1.txt","r")
+userFile = open("compiledUsers-04-06-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []
@@ -33,7 +33,7 @@ for line in usersFileLines:
     splicedUsername = " ".join(splicedUsername)
     users.append((platform,username))
 
-file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\DownloadedNames1231.json","r")
+file = open("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\downloadSchedule\\downloadSchedule.json","r")
 downloadSchedule = json.load(file)
 file.close()
 
@@ -77,7 +77,7 @@ def checkIntegrety(username,platform,data):
 
 # username should not be in the url-coded (%20) form
 def isDownloadUser(username,platform,download_schedule,failed_users):
-    TIME_OFFSET = 86000 * 3
+    TIME_OFFSET = 86400 * 1
     user_hash_schedule = username + "," + platform
     user_hash_failed = platform + "," + username
 
@@ -87,7 +87,7 @@ def isDownloadUser(username,platform,download_schedule,failed_users):
     if user_hash_schedule not in download_schedule:
         return True
 
-    if time.time() > download_schedule[user_hash_schedule]:
+    if time.time() + TIME_OFFSET > download_schedule[user_hash_schedule]:
         return True
     
     return False
@@ -101,6 +101,7 @@ def getUser(driver,url):
                 )
                 return json.loads(driver.find_element(by=By.TAG_NAME,value="pre").text)
             except Exception as e:
+                time.sleep(100)
                 return getUser(driver, url)
 
 def parseSegments(stats,segments):
@@ -146,7 +147,7 @@ def parseSegments(stats,segments):
         
     return stats
 
-def handleErrors(username,platform,data):
+def handleErrors(username,platform,data,driver):
     error_message = data["errors"][0]["code"]
     if error_message == "CollectorResultStatus::NotFound":
         mutex.acquire()
@@ -157,7 +158,13 @@ def handleErrors(username,platform,data):
         return False
 
     if error_message == "CollectorResultStatus::ExternalError":
-        time.sleep(120)
+        # driver.quit()
+        # time.sleep(5)
+        # opts = uc.ChromeOptions()
+        # opts.add_argument("--window-size=1020,900")  
+        # opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check --incognito')
+        # driver = uc.Chrome(options=opts)
+        time.sleep(60)
         return True
     
     mutex.acquire()
@@ -166,10 +173,9 @@ def handleErrors(username,platform,data):
     file.close()
     mutex.release()
 
-    if error_message not in errors:
-        errors[error_message] = 0
-    
-    errors[error_message] += 1
+    if str(error_message) not in errors:
+        errors[str(error_message)] = 1
+    else: errors[str(error_message)] += 1
 
     mutex.acquire()
     file = open("errors.json","w")
@@ -186,10 +192,10 @@ def downloadThread(id):
     # opts.headless = True
     # prefs = {"profile.managed_default_content_settings.images": 2}
     # opts.add_experimental_option("prefs", prefs)
-    # opts.add_argument('--headless')
+    opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
-    opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check')
+    opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check --incognito')
     # opts.add_argument("--load-extension=C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0")
     # opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
     # opts.add_argument("--unsafe-pac-url")  
@@ -232,8 +238,8 @@ def downloadThread(id):
             data = getUser(driver,url)
 
             if "errors" in data:
-                retry = handleErrors(username,platform,data)
-                if retry:
+                retry = handleErrors(username,platform,data,driver)
+                if retry and len(users) > 100:
                     mutex.acquire()
                     users.append((platform,url_name))
                     mutex.release()
@@ -273,6 +279,7 @@ def downloadThread(id):
     dataFile.write(json.dumps(players))
     dataFile.close()
     players = {}
+    return
 
 number = len(users)
 
@@ -284,7 +291,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(10)
+    time.sleep(20)
 
 for item in threads:
     item.join()

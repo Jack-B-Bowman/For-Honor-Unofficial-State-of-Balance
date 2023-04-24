@@ -33,7 +33,7 @@ tracker.gg##body:style(overflow:auto!important)
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 6
+    arg = 3
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -196,7 +196,7 @@ def downloadThread(id):
     opts.add_argument("--window-size=1020,900")  
     opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check')
     opts.add_argument("--load-extension=C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0")
-    # opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
+    opts.add_extension("C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\extensions\\extension_1_45_2_0.crx")
     # opts.add_argument("--unsafe-pac-url")  
     # uc.TARGET_VERSION  = 104
     # driver = uc.Chrome(options=opts,driver_executable_path = "C:\\Users\\Jack Bowman\\Documents\\Programs\\PytScripts\\UserScraper\\chromedriver.exe")
@@ -219,7 +219,7 @@ def downloadThread(id):
     # enable button
     # driver.execute_script("document.evaluate('/html/body/div[1]/p[2]/button[1]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.disabled=false;")
     # Alert(driver).accept()
-    # time.sleep(10)
+    time.sleep(20)
     num = 0
 
     userCheckHashmap=constructUserCheckHashmap()
@@ -337,17 +337,15 @@ def downloadThread(id):
                         # time.sleep(60)
                         players = {}
         except Exception as e:
-            mutex.acquire()
-            file = open("ERRORLOG.json","r")
-            errorlog = json.load(file)
-            if user not in errorlog:
-                errorlog[f"{username},{platform}"] = str(e)
-                users.append(user)
+            # file = open("ERRORLOG.json","r")
+            # errorlog = json.load(file)
+            # if user not in errorlog:
+            #     errorlog[f"{username},{platform}"] = str(e)
+            #     users.append(user)
+            # file.close()
+            # file = open(f"ERRORLOG-{id}.json","w")
+            # json.dump(errorlog,file)
             file.close()
-            file = open("ERRORLOG.json","w")
-            json.dump(errorlog,file)
-            file.close()
-            mutex.release()
 
 
 
@@ -373,7 +371,7 @@ for n in range(arg):
     t = threading.Thread(target=downloadThread, args=[n])
     t.start()
     threads.append(t)
-    time.sleep(5)
+    time.sleep(60)
 
 for item in threads:
     item.join()

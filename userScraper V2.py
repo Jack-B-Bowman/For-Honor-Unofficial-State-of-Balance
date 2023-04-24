@@ -33,7 +33,7 @@ def getData(data):
 def downloadThread(id):
     opts = uc.ChromeOptions()
     # opts.headless = True
-    # opts.add_argument('--headless')
+    opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     # opts.add_argument("--unsafe-pac-url")  
@@ -42,7 +42,7 @@ def downloadThread(id):
 
     timeToStop = False
     # skip = 380500
-    skip = 161300
+    skip = 0
     cutoffCounter = 0
     while not timeToStop:
         cutoffCounter += 1
@@ -79,7 +79,7 @@ def downloadThread(id):
 
         skip += 100
         print(f"users scraped = {skip}")
-        file = open("usersTesting03-15-1.txt","a")
+        file = open("usersTesting04-06-1.txt","a")
         for user in playerList:
             try:
                 file.write(user[0] + "," + user[1] + "\n")
