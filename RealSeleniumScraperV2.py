@@ -33,11 +33,11 @@ tracker.gg##body:style(overflow:auto!important)
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 3
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
-userFile = open("usersTesting03-15-1.txt","r")
+userFile = open("compiledUsers-04-06-1.csv","r")
 usersFileLines = userFile.readlines()
 userFile.close()
 users = []

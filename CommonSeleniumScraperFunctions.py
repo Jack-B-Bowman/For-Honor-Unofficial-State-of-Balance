@@ -48,7 +48,7 @@ modeNames = {
     }
 
 def constructUserCheckHashmap():
-    userFile = open("usersTesting03-15-1.txt","r")
+    userFile = open("compiledUsers-04-06-1.csv","r")
     usersFileLines = userFile.readlines()
     userFile.close()
     userCheckHashmap = {}

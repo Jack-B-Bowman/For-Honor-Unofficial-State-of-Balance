@@ -2,6 +2,8 @@ import json
 from unicodedata import name
 import matplotlib.pyplot as plt
 import numpy as np
+import CommonDataAnalysisLib as cdl
+
 
 import seaborn as sns
 
@@ -16,6 +18,11 @@ seasonEndDate = 1666656044 # kensei hitstun+matchmaking
 seasonEndDate = 91666656044 # kensei hitstun+matchmaking
 seasonStartDate = 1666656044 # kensei hitstun+matchmaking
 seasonStartDate = 1670392861 # valk & tiandi
+seasonStartDate   = cdl.dateToUnixTime("16 3 2023") #light dodge attacks
+seasonEndDate = cdl.dateToUnixTime("16 3 2024")
+
+
+# BIG IMPORTANT NOTICE: THIS WILL NOT WORK BECAUSE THE TRACKER CHANGED THEIR METHOD OF CALCULATING TOTAL WINS AND LOSSES TO SUM OF HERO STATS
 # seasonStartDate = 0
 # conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()

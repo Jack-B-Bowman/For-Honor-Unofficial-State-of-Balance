@@ -1,6 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import CommonDataAnalysisLib as cdl
 import sqlite3
 conn = sqlite3.connect("FH.db")
 crsr = conn.cursor()
@@ -13,6 +14,8 @@ seasonStartDate = 1663248434 # dodge
 # postSeasonStartDate = 1666656044 # kensei hitstun+matchmaking
 # seasonStartDate = 1666137644 # crossplay phase 2
 postSeasonStartDate = 1670392861 # valk & tiandi
+seasonStartDate = cdl.dateToUnixTime("2 2 2023") 
+postSeasonStartDate   = cdl.dateToUnixTime("16 3 2023")
 
 sqlPostSeason = f"""
 select name,
@@ -148,6 +151,7 @@ for i in range(len(ans)):
 
 
 theMap = {
+"Afeera" : [],
 "Aramusha" : [],
 "Berserker" : [],
 "Black Prior" : [],
@@ -182,6 +186,7 @@ theMap = {
 }
 
 theMap2 = {
+"Afeera" : {"wins": 0, "losses": 0},
 "Aramusha" : {"wins": 0, "losses": 0},
 "Berserker" : {"wins": 0, "losses": 0},
 "Black Prior" : {"wins": 0, "losses": 0},

@@ -13,7 +13,7 @@ mutex = threading.Lock()
 
 arg = 0
 if len(sys.argv) < 2:
-    arg = 2
+    arg = 1
 else: arg = int(sys.argv[1])
 
 # read in the users csv
@@ -66,7 +66,7 @@ def progThread(id):
 
         display += f"{progress:.2f}%"
         print(f"\r{display}",end="")
-        time.sleep(1)
+        time.sleep(5)
 
 def checkIntegrety(username,platform,data):
     if data['platformInfo']['platformUserHandle'] != username:
@@ -192,7 +192,7 @@ def downloadThread(id):
     # opts.headless = True
     # prefs = {"profile.managed_default_content_settings.images": 2}
     # opts.add_experimental_option("prefs", prefs)
-    opts.add_argument('--headless')
+    # opts.add_argument('--headless')
     # opts.add_argument('--proxy-server=103.147.118.17:9091')
     opts.add_argument("--window-size=1020,900")  
     opts.add_argument('--no-first-run --no-service-autorun --password-store=basic --no-default-browser-check --incognito')
