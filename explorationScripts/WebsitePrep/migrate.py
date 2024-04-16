@@ -39,6 +39,7 @@ def get_stats(join_table,MAX_or_MIN):
     return crsr.fetchall()
 
 # get oldest mode data for each player
+print("get oldest mode data for each player")
 data = {}
 data["data"] = get_stats("mode","MIN")
 file = open(OLD_MODE_PATH,"w")
@@ -46,6 +47,7 @@ file.write(json.dumps(data) + "\n")
 file.close()
 
 # get newest mode data for each player
+print("get newest mode data for each player")
 file = open(NEW_MODE_PATH,"w")
 data = {}
 data["data"] = get_stats("mode","MAX")
@@ -53,6 +55,7 @@ file.write(json.dumps(data) + "\n")
 file.close()
 
 # get oldest hero data for each player
+print("oldest hero data for each player")
 file = open(OLD_HERO_PATH,"w")
 data = {}
 data["data"] = get_stats("hero","MIN")
@@ -60,6 +63,7 @@ file.write(json.dumps(data) + "\n")
 file.close()
 
 # get newest hero data for each player
+print("get newest hero data for each player")
 file = open(NEW_HERO_PATH,"w")
 data = {}
 data["data"] = get_stats("hero","MAX")
@@ -68,8 +72,9 @@ file.close()
 data = {}
 
 # convert the SQL dump into proper json
-
+print("convert the SQL dump into proper json")
 # get old data from files and combine it
+print("get old data from files and combine it")
 file = open(OLD_MODE_PATH,"r")
 datafile = json.load(file)
 file.close()
@@ -83,6 +88,7 @@ old_data = dd.sql_dump_to_json(datafile,"hero",users=old_data)
 
 
 # get new data from files and combine it
+print("get new data from files and combine it")
 file = open(NEW_MODE_PATH,"r")
 datafile = json.load(file)
 file.close()
@@ -97,6 +103,7 @@ new_data = dd.sql_dump_to_json(datafile,"hero",users=new_data)
 datafile = {}
 
 # merge old and new data and write it into 1000 user files
+print("segment data")
 user_data = {}
 count = 0
 for player in new_data:
@@ -119,4 +126,4 @@ new_data = {}
 old_data = {}
 
 # go through each 1000 user file and insert it into the database
-insert_files()
+# insert_files()
